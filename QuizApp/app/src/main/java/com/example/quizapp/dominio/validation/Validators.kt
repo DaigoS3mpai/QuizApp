@@ -13,8 +13,8 @@ fun validateEmail(email: String): String? {                            // Retorn
 fun validateNameLettersOnly(name: String): String? {                   // Valida nombre
     if (name.isBlank()) return "El nombre es obligatorio"              // Regla 1: no vacío
 
-    val regex = Regex("^[A-Za-zÁÉÍÓÚÑáéíóúñ0-9 ]+$")                      // Regla 2: solo letras,espacios(con tildes/ñ) y numeros
-    return if (!regex.matches(name)) "Solo letras y espacios" else null// Mensaje si falla
+    val regex = Regex("^[A-Za-zÁÉÍÓÚÑáéíóúñ0-9]+$")                      // Regla 2: solo letras y numeros
+    return if (!regex.matches(name)) "Solo letras y numeros" else null// Mensaje si falla
 
 }
 
@@ -35,4 +35,5 @@ fun validateStrongPassword(pass: String): String? {                    // Requis
 fun validateConfirm(pass: String, confirm: String): String? {          // Confirmación de contraseña
     if (confirm.isBlank()) return "Confirma tu contraseña"             // No vacío
     return if (pass != confirm) "Las contraseñas no coinciden" else null // Deben ser iguales
+
 }
