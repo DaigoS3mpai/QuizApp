@@ -26,11 +26,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.quizapp.R
+import com.example.quizapp.navegation.Route
 import com.example.quizapp.ui.components.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun menuPrincipal(navController: NavHostController) {
+fun MenuOpciones(navController: NavHostController) {
     Scaffold(
         topBar = {
             AppTopBar(
@@ -43,7 +44,7 @@ fun menuPrincipal(navController: NavHostController) {
                             .padding(end = 8.dp)
                             .background(Color.Transparent)
                             .clickable {
-                                navController.navigate("Perfil")
+                                navController.navigate(Route.Perfil.path)
                             },
                         contentScale = ContentScale.Fit
                     )
@@ -68,7 +69,7 @@ fun menuPrincipal(navController: NavHostController) {
                     .height(250.dp),
                 contentScale = ContentScale.Fit
             )
-            Button(onClick = { navController.navigate("Jugar") },
+            Button(onClick = { navController.navigate(Route.Categoria.path) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
@@ -76,7 +77,7 @@ fun menuPrincipal(navController: NavHostController) {
             ) {
                 Text("Jugar", fontSize = 25.sp)
             }
-            Button(onClick = { navController.navigate("menuPrincipal") },
+            Button(onClick = { navController.navigate(Route.MenuInicioSesion.path) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
@@ -92,5 +93,5 @@ fun menuPrincipal(navController: NavHostController) {
 @Composable
 fun menuPrincipalPreview(){
     val navController = rememberNavController()
-    menuPrincipal(navController)
+    MenuOpciones(navController)
 }

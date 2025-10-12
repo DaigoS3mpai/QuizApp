@@ -3,17 +3,8 @@ package com.example.quizapp.ui.screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,17 +17,17 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.quizapp.R
+import com.example.quizapp.navegation.Route
 import com.example.quizapp.ui.components.AppTopBar
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun loginScreen(navController: NavHostController) {
+fun Login(navController: NavHostController) {
     var usuario by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Scaffold(
-        topBar = {
-            AppTopBar()
-        }
+        topBar = { AppTopBar() }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -44,18 +35,21 @@ fun loginScreen(navController: NavHostController) {
                 .fillMaxSize()
                 .background(Color(0xFF87CEEB))
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Logo de la aplicación
             Image(
                 painter = painterResource(R.drawable.logo),
                 contentDescription = "Logo Aplicación",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(250.dp),
+                    .height(200.dp)
+                    .padding(bottom = 16.dp),
                 contentScale = ContentScale.Fit
             )
 
+            // Campo usuario
             OutlinedTextField(
                 value = usuario,
                 onValueChange = { usuario = it },
@@ -64,26 +58,33 @@ fun loginScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // Campo contraseña
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text("Contraseña") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 16.dp)
             )
 
+            // Botón iniciar sesión
             Button(
-                onClick = { navController.navigate("MenuOpciones") },
+                onClick = { navController.navigate(Route.MenuOpciones.path) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
             ) {
                 Text("Iniciar Sesión", fontSize = 18.sp)
             }
 
+            // Botón volver
             Button(
                 onClick = { navController.popBackStack() },
                 colors = ButtonDefaults.buttonColors(
@@ -102,5 +103,5 @@ fun loginScreen(navController: NavHostController) {
 @Composable
 fun LoginScreenPreview() {
     val navController = rememberNavController()
-    loginScreen(navController)
+    Login(navController)
 }

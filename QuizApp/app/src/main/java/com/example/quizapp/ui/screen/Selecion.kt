@@ -25,11 +25,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.quizapp.R
+import com.example.quizapp.navegation.Route
 import com.example.quizapp.ui.components.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun playScreen(navController: NavHostController) {
+fun Selecion(navController: NavHostController) {
     Scaffold(
         topBar = {
             AppTopBar()
@@ -54,7 +55,7 @@ fun playScreen(navController: NavHostController) {
             )
 
             Button(
-                onClick = { navController.navigate("Categoria") },
+                onClick = { navController.navigate(Route.Categoria.path) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
@@ -64,7 +65,7 @@ fun playScreen(navController: NavHostController) {
             }
 
             Button(
-                onClick = { navController.navigate("Categoria") },
+                onClick = { navController.navigate(Route.Categoria.path) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
@@ -73,7 +74,7 @@ fun playScreen(navController: NavHostController) {
                 Text("Medio", fontSize = 25.sp)
             }
             Button(
-                onClick = { navController.navigate("Categoria") },
+                onClick = { navController.navigate(Route.Categoria.path) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
@@ -98,5 +99,5 @@ fun playScreen(navController: NavHostController) {
 @Composable
 fun playScreenPreview() {
     val navController = rememberNavController()
-    playScreen(navController)
+    Selecion(navController)
 }

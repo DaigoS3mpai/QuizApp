@@ -25,11 +25,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.quizapp.R
+import com.example.quizapp.navegation.Route
 import com.example.quizapp.ui.components.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun cateScreen(navController: NavHostController) {
+fun Categoria(navController: NavHostController) {
     Scaffold(
         topBar = {
             AppTopBar()
@@ -107,5 +108,5 @@ fun cateScreen(navController: NavHostController) {
 @Composable
 fun cateScreenPreview() {
     val navController = rememberNavController()
-    cateScreen(navController)
+    Categoria(navController)
 }

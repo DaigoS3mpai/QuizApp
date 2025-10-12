@@ -30,11 +30,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.quizapp.R
+import com.example.quizapp.navegation.Route
 import com.example.quizapp.ui.components.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun registerScreen(navController: NavHostController) {
+fun Registro(navController: NavHostController) {
     // Variables para crear usuario
     var usuario by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -88,7 +89,7 @@ fun registerScreen(navController: NavHostController) {
             )
 
             Button(
-                onClick = { navController.navigate("Perfil") },
+                onClick = { navController.navigate(Route.Perfil.path) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
@@ -114,5 +115,5 @@ fun registerScreen(navController: NavHostController) {
 @Composable
 fun registerScreenPreview() {
     val navController = rememberNavController()
-    registerScreen(navController)
+    Registro(navController)
 }
