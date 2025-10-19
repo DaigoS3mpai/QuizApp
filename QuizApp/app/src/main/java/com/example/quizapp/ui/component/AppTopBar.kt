@@ -1,4 +1,4 @@
-package com.example.quizapp.ui.components
+package com.example.quizapp.ui.component
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons

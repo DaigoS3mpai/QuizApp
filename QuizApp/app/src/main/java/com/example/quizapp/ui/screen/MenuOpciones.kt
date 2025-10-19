@@ -27,7 +27,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.quizapp.R
 import com.example.quizapp.navegation.Route
-import com.example.quizapp.ui.components.AppTopBar
+import com.example.quizapp.ui.component.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

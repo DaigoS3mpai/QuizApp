@@ -2,9 +2,21 @@ package com.example.quizapp.ui.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,18 +26,22 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.quizapp.R
 import com.example.quizapp.navegation.Route
-import com.example.quizapp.ui.components.AppTopBar
+import com.example.quizapp.ui.component.AppTopBar
+import com.example.quizapp.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Login(navController: NavHostController) {
-    var usuario by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-
+fun Login(
+    navController: NavHostController,
+    viewModel: AuthViewModel = viewModel()
+) {
+// Observamos el estado del login desde el ViewModel
+    val state by viewModel.login.collectAsState()
     Scaffold(
         topBar = { AppTopBar() }
     ) { innerPadding ->
@@ -49,30 +65,45 @@ fun Login(navController: NavHostController) {
                 contentScale = ContentScale.Fit
             )
 
-            // Campo usuario
+            // Campo usuario o email
             OutlinedTextField(
-                value = usuario,
-                onValueChange = { usuario = it },
-                label = { Text("Nombre de usuario") },
+                value = state.email,
+                onValueChange = viewModel::onLoginEmailChange, // ya usa validateLoginUserOrEmail
+                label = { Text("Usuario o correo") },        // solo cambiamos la etiqueta
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                isError = state.emailError != null,
+                supportingText = {
+                    state.emailError?.let { Text(it, color = Color.Red, fontSize = 12.sp) }
+                }
             )
 
             // Campo contraseña
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
+                value = state.pass,
+                onValueChange = viewModel::onLoginPassChange,
                 label = { Text("Contraseña") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp, bottom = 16.dp)
+                    .padding(top = 8.dp, bottom = 16.dp),
+                isError = state.passError != null,
+                supportingText = {
+                    state.passError?.let { Text(it, color = Color.Red, fontSize = 12.sp) }
+                }
             )
 
             // Botón iniciar sesión
             Button(
-                onClick = { navController.navigate(Route.MenuOpciones.path) },
+                onClick = {
+                    viewModel.submitLogin()
+                    if (state.success) {
+                        viewModel.clearLoginResult()
+                        navController.navigate(Route.MenuOpciones.path)
+                    }
+                },
+                enabled = state.canSubmit && !state.isSubmitting,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
@@ -81,7 +112,15 @@ fun Login(navController: NavHostController) {
                     .fillMaxWidth()
                     .padding(bottom = 8.dp)
             ) {
-                Text("Iniciar Sesión", fontSize = 18.sp)
+                Text(
+                    text = if (state.isSubmitting) "Iniciando..." else "Iniciar Sesión",
+                    fontSize = 18.sp
+                )
+            }
+
+            // Mensaje de error general
+            state.errorMsg?.let {
+                Text(text = it, color = Color.Red, fontSize = 14.sp)
             }
 
             // Botón volver
@@ -97,6 +136,7 @@ fun Login(navController: NavHostController) {
             }
         }
     }
+
 }
 
 @Preview(showBackground = true)
