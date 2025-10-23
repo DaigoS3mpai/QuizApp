@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    //Agregados al proyecto
+    id("com.google.devtools.ksp") version "2.0.21-1.0.25"
 }
 
 android {
@@ -65,4 +67,12 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("com.github.yalantis:ucrop:2.2.8")
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
+
 }

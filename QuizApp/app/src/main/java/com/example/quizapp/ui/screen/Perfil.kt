@@ -1,6 +1,8 @@
 package com.example.quizapp.ui.screen
 
+import android.content.Context
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -14,10 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -26,6 +30,25 @@ import com.example.quizapp.R
 import com.example.quizapp.navegation.Route
 import com.example.quizapp.ui.component.AppTopBar
 import com.example.quizapp.ui.viewmodel.AuthViewModel
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+// Función para crear archivo temporal de imagen
+private fun createTempImageFile(context: Context): File {
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val storageDir = File(context.cacheDir, "images").apply {
+        if (!exists()) mkdirs()
+    }
+    return File(storageDir, "IMG_$timeStamp.jpg")
+}
+
+// Función para obtener URI del archivo usando FileProvider
+private fun getTempImageUri(context: Context, file: File): Uri {
+    val authority = "${context.packageName}.fileprovider"
+    return FileProvider.getUriForFile(context, authority, file)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,20 +56,34 @@ fun Perfil(
     navController: NavHostController,
     viewModel: AuthViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val userState by viewModel.login.collectAsState()
     val user = viewModel.getCurrentUser(userState.email)
 
-    // Inicializamos la imagen con la guardada en el usuario
-    var profileImageUri by remember { mutableStateOf(user?.profileImageUri) }
+    var profileImageUri by remember { mutableStateOf<Uri?>(user?.profileImageUri) }
+    var pendingCaptureUri by remember { mutableStateOf<Uri?>(null) }
 
     // Lanzador para seleccionar imagen de la galería
-    val launcher = rememberLauncherForActivityResult(
+    val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             profileImageUri = it
-            // Guardamos la imagen en el usuario actual
             user?.profileImageUri = it
+        }
+    }
+
+    // Lanzador para capturar foto con la cámara
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && pendingCaptureUri != null) {
+            profileImageUri = pendingCaptureUri
+            user?.profileImageUri = pendingCaptureUri
+            Toast.makeText(context, "Foto capturada correctamente", Toast.LENGTH_SHORT).show()
+        } else {
+            pendingCaptureUri = null
+            Toast.makeText(context, "Error al capturar foto", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -62,6 +99,7 @@ fun Perfil(
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             // Imagen de perfil circular
             Box(
                 modifier = Modifier
@@ -80,30 +118,46 @@ fun Perfil(
                 } else {
                     Image(
                         painter = painterResource(R.drawable.perfil),
-                        contentDescription = "Foto de perfil",
+                        contentDescription = "Foto de perfil por defecto",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
             }
 
-            // Botón cambiar foto
+            // Botón para seleccionar imagen desde galería
             Button(
-                onClick = { launcher.launch("image/*") },
+                onClick = { galleryLauncher.launch("image/*") },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
                 )
             ) {
-                Text("Cambiar Foto de Perfil", fontSize = 18.sp)
+                Text("Seleccionar desde galería", fontSize = 18.sp)
+            }
+
+            // Botón para capturar foto con cámara
+            Button(
+                onClick = {
+                    val photoFile = createTempImageFile(context)
+                    val photoUri = getTempImageUri(context, photoFile)
+                    pendingCaptureUri = photoUri
+                    cameraLauncher.launch(photoUri)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF58B956),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Tomar Foto con Cámara", fontSize = 18.sp)
             }
 
             // Datos del usuario
-            Text(text = user?.name ?: "Usuario", fontSize = 25.sp)
+            Text(text = user?.name ?: "Usuario:", fontSize = 25.sp)
             Text(text = "Puntaje Usuario: ${user?.score ?: 0}", fontSize = 25.sp)
             Text(text = "Puntaje Mundial: ${viewModel.getGlobalScore()}", fontSize = 25.sp)
 
-            // Botón inicio
+            // Botón de regreso al menú principal
             Button(
                 onClick = { navController.navigate(Route.MenuOpciones.path) },
                 colors = ButtonDefaults.buttonColors(
@@ -119,7 +173,7 @@ fun Perfil(
 
 @Preview(showBackground = true)
 @Composable
-fun perfilScreenPreview() {
+fun PerfilScreenPreview() {
     val navController = rememberNavController()
     Perfil(navController)
 }

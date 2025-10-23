@@ -2,7 +2,6 @@ package com.example.quizapp.ui.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,30 +25,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.quizapp.R
-import com.example.quizapp.navegation.Route
 import com.example.quizapp.ui.component.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MenuOpciones(navController: NavHostController) {
+fun CategoriaFacil(navController: NavHostController) {
     Scaffold(
         topBar = {
-            AppTopBar(
-                actions = {
-                    Image(
-                        painter = painterResource(R.drawable.perfil),
-                        contentDescription = "Perfil",
-                        modifier = Modifier
-                            .height(40.dp)
-                            .padding(end = 8.dp)
-                            .background(Color.Transparent)
-                            .clickable {
-                                navController.navigate(Route.Perfil.path)
-                            },
-                        contentScale = ContentScale.Fit
-                    )
-                }
-            )
+            AppTopBar()
         }
     ) { innerPadding ->
         Column(
@@ -69,21 +52,52 @@ fun MenuOpciones(navController: NavHostController) {
                     .height(250.dp),
                 contentScale = ContentScale.Fit
             )
-            Button(onClick = { navController.navigate(Route.Selecion.path) },
+
+            Button(
+                onClick = { navController.navigate("") },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
                 )
             ) {
-                Text("Jugar", fontSize = 25.sp)
+                Text("Arte", fontSize = 25.sp)
             }
-            Button(onClick = { navController.navigate(Route.MenuInicioSesion.path) },
+
+            Button(
+                onClick = { navController.navigate("") },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
                 )
             ) {
-                Text("Cerrar Sesión", fontSize = 25.sp)
+                Text("Deporte", fontSize = 25.sp)
+            }
+            Button(
+                onClick = { navController.navigate("") },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF58B956),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Historia", fontSize = 25.sp)
+            }
+            Button(
+                onClick = { navController.navigate("") },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF58B956),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Cine", fontSize = 25.sp)
+            }
+            Button(
+                onClick = { navController.popBackStack() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF58B956),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Volver", fontSize = 25.sp)
             }
         }
     }
@@ -91,7 +105,7 @@ fun MenuOpciones(navController: NavHostController) {
 
 @Preview(showBackground = true)
 @Composable
-fun menuPrincipalPreview(){
+fun cateScreenPreview() {
     val navController = rememberNavController()
-    MenuOpciones(navController)
+    CategoriaFacil(navController)
 }

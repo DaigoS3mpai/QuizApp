@@ -11,11 +11,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.quizapp.navegation.Route
+import com.example.quizapp.ui.screen.CategoriaDificil
+import com.example.quizapp.ui.screen.CategoriaFacil
+import com.example.quizapp.ui.screen.CategoriaNormal
 import com.example.quizapp.ui.screen.Login
-import com.example.quizapp.ui.screen.Categoria
 import com.example.quizapp.ui.screen.MenuInicioSesion
 import com.example.quizapp.ui.screen.MenuOpciones
 import com.example.quizapp.ui.screen.Perfil
+import com.example.quizapp.ui.screen.QuizDificil
+import com.example.quizapp.ui.screen.QuizFacil
+import com.example.quizapp.ui.screen.QuizNormal
 import com.example.quizapp.ui.screen.Registro
 import com.example.quizapp.ui.screen.Selecion
 class MainActivity : ComponentActivity() {
@@ -44,8 +49,14 @@ fun AppRoot() {
                 composable(Route.Registro.path) { Registro(navController) }
                 composable(Route.MenuOpciones.path) { MenuOpciones(navController) }
                 composable(Route.Perfil.path) { Perfil(navController) }
-                composable(Route.Categoria.path) { Categoria(navController) }
+                composable(Route.CategoriaFacil.path) { CategoriaFacil(navController) }
+                composable(Route.CategoriaNormal.path) { CategoriaNormal(navController) }
+                composable(Route.CategoriaDificil.path) { CategoriaDificil(navController) }
+                composable(Route.QuizFacil.path) { QuizFacil(navController) }
+                composable(Route.QuizNormal.path) { QuizNormal(navController) }
+                composable(Route.QuizDificil.path) { QuizDificil(navController) }
                 composable(Route.Selecion.path) { Selecion(navController) }
+
             }
         }
     }

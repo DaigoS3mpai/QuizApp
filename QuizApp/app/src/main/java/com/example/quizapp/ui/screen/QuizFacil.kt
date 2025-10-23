@@ -31,27 +31,9 @@ import com.example.quizapp.ui.component.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MenuOpciones(navController: NavHostController) {
-    Scaffold(
-        topBar = {
-            AppTopBar(
-                actions = {
-                    Image(
-                        painter = painterResource(R.drawable.perfil),
-                        contentDescription = "Perfil",
-                        modifier = Modifier
-                            .height(40.dp)
-                            .padding(end = 8.dp)
-                            .background(Color.Transparent)
-                            .clickable {
-                                navController.navigate(Route.Perfil.path)
-                            },
-                        contentScale = ContentScale.Fit
-                    )
-                }
-            )
-        }
-    ) { innerPadding ->
+fun QuizFacil(navController: NavHostController) {
+    Scaffold (topBar = { AppTopBar() })
+    { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -69,21 +51,37 @@ fun MenuOpciones(navController: NavHostController) {
                     .height(250.dp),
                 contentScale = ContentScale.Fit
             )
-            Button(onClick = { navController.navigate(Route.Selecion.path) },
+            Button(onClick = { },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
                 )
             ) {
-                Text("Jugar", fontSize = 25.sp)
+                Text("", fontSize = 25.sp)
             }
-            Button(onClick = { navController.navigate(Route.MenuInicioSesion.path) },
+            Button(onClick = { },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
                 )
             ) {
-                Text("Cerrar Sesión", fontSize = 25.sp)
+                Text("", fontSize = 25.sp)
+            }
+            Button(onClick = { },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF58B956),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("", fontSize = 25.sp)
+            }
+            Button(onClick = { },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF58B956),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("", fontSize = 25.sp)
             }
         }
     }
@@ -91,7 +89,7 @@ fun MenuOpciones(navController: NavHostController) {
 
 @Preview(showBackground = true)
 @Composable
-fun menuPrincipalPreview(){
+fun QuizFacilPreview(){
     val navController = rememberNavController()
-    MenuOpciones(navController)
+    QuizFacil(navController)
 }

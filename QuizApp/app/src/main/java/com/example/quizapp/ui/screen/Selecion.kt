@@ -55,7 +55,7 @@ fun Selecion(navController: NavHostController) {
             )
 
             Button(
-                onClick = { navController.navigate(Route.Categoria.path) },
+                onClick = { navController.navigate(Route.CategoriaFacil.path) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
@@ -65,7 +65,7 @@ fun Selecion(navController: NavHostController) {
             }
 
             Button(
-                onClick = { navController.navigate(Route.Categoria.path) },
+                onClick = { navController.navigate(Route.CategoriaNormal.path) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
@@ -74,7 +74,7 @@ fun Selecion(navController: NavHostController) {
                 Text("Medio", fontSize = 25.sp)
             }
             Button(
-                onClick = { navController.navigate(Route.Categoria.path) },
+                onClick = { navController.navigate(Route.CategoriaDificil.path) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
                     contentColor = Color.Black
