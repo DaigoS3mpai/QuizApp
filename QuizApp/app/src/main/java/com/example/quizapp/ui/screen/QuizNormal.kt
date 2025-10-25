@@ -1,5 +1,9 @@
 package com.example.quizapp.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +19,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,6 +41,12 @@ import com.example.quizapp.ui.component.AppTopBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuizNormal(navController: NavHostController) {
+
+    var buttonsVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        buttonsVisible = true
+    }
+
     Scaffold (topBar = { AppTopBar() })
     { innerPadding ->
         Column(
@@ -51,6 +66,29 @@ fun QuizNormal(navController: NavHostController) {
                     .height(250.dp),
                 contentScale = ContentScale.Fit
             )
+            AnimatedVisibility(
+                visible = buttonsVisible,
+
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
+            Button(onClick = { },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF58B956),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("", fontSize = 25.sp)
+
+            }
+
+            }
+            AnimatedVisibility(
+                visible = buttonsVisible,
+
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
             Button(onClick = { },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
@@ -59,6 +97,14 @@ fun QuizNormal(navController: NavHostController) {
             ) {
                 Text("", fontSize = 25.sp)
             }
+
+            }
+            AnimatedVisibility(
+                visible = buttonsVisible,
+
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
             Button(onClick = { },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
@@ -67,6 +113,13 @@ fun QuizNormal(navController: NavHostController) {
             ) {
                 Text("", fontSize = 25.sp)
             }
+            }
+            AnimatedVisibility(
+                visible = buttonsVisible,
+
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
             Button(onClick = { },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF58B956),
@@ -75,13 +128,7 @@ fun QuizNormal(navController: NavHostController) {
             ) {
                 Text("", fontSize = 25.sp)
             }
-            Button(onClick = { },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF58B956),
-                    contentColor = Color.Black
-                )
-            ) {
-                Text("", fontSize = 25.sp)
+
             }
         }
     }

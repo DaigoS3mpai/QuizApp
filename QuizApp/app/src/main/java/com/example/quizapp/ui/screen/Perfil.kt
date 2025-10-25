@@ -5,6 +5,10 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -86,7 +90,10 @@ fun Perfil(
             Toast.makeText(context, "Error al capturar foto", Toast.LENGTH_SHORT).show()
         }
     }
-
+    var buttonsVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        buttonsVisible = true
+    }
     Scaffold(
         topBar = { AppTopBar() }
     ) { innerPadding ->
@@ -124,6 +131,12 @@ fun Perfil(
                     )
                 }
             }
+            AnimatedVisibility(
+                visible = buttonsVisible,
+
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
 
             // Botón para seleccionar imagen desde galería
             Button(
@@ -135,6 +148,15 @@ fun Perfil(
             ) {
                 Text("Seleccionar desde galería", fontSize = 18.sp)
             }
+
+            }
+
+            AnimatedVisibility(
+                visible = buttonsVisible,
+
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
 
             // Botón para capturar foto con cámara
             Button(
@@ -151,12 +173,19 @@ fun Perfil(
             ) {
                 Text("Tomar Foto con Cámara", fontSize = 18.sp)
             }
+            }
 
             // Datos del usuario
             Text(text = user?.name ?: "Usuario:", fontSize = 25.sp)
             Text(text = "Puntaje Usuario: ${user?.score ?: 0}", fontSize = 25.sp)
             Text(text = "Puntaje Mundial: ${viewModel.getGlobalScore()}", fontSize = 25.sp)
 
+            AnimatedVisibility(
+                visible = buttonsVisible,
+
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
             // Botón de regreso al menú principal
             Button(
                 onClick = { navController.navigate(Route.MenuOpciones.path) },
@@ -166,6 +195,8 @@ fun Perfil(
                 )
             ) {
                 Text("Inicio", fontSize = 25.sp)
+            }
+
             }
         }
     }

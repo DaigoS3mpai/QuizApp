@@ -1,10 +1,19 @@
 package com.example.quizapp.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,6 +31,11 @@ import com.example.quizapp.ui.component.AppTopBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MenuInicioSesion(navController: NavHostController) {
+
+    var buttonsVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        buttonsVisible = true
+    }
     Scaffold(
         topBar = { AppTopBar() }
     ) { innerPadding ->
@@ -44,6 +58,12 @@ fun MenuInicioSesion(navController: NavHostController) {
                     .padding(bottom = 32.dp),
                 contentScale = ContentScale.Fit
             )
+            AnimatedVisibility(
+                visible = buttonsVisible,
+
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
 
             // Botón para crear cuenta
             Button(
@@ -59,7 +79,15 @@ fun MenuInicioSesion(navController: NavHostController) {
                 Text("Crear Cuenta", fontSize = 22.sp)
             }
 
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
+            AnimatedVisibility(
+                visible = buttonsVisible,
+
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
 
             // Botón para iniciar sesión
             Button(
@@ -73,6 +101,8 @@ fun MenuInicioSesion(navController: NavHostController) {
                     .height(60.dp)
             ) {
                 Text("Iniciar Sesión", fontSize = 22.sp)
+            }
+
             }
         }
     }

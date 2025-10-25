@@ -1,5 +1,9 @@
 package com.example.quizapp.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,8 +19,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +50,10 @@ fun Login(
 ) {
 // Observamos el estado del login desde el ViewModel
     val state by viewModel.login.collectAsState()
+    var buttonsVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        buttonsVisible = true
+    }
     Scaffold(
         topBar = { AppTopBar() }
     ) { innerPadding ->
@@ -94,6 +106,12 @@ fun Login(
                 }
             )
 
+            AnimatedVisibility(
+                visible = buttonsVisible,
+
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
             // Botón iniciar sesión
             Button(
                 onClick = {
@@ -123,6 +141,15 @@ fun Login(
                 Text(text = it, color = Color.Red, fontSize = 14.sp)
             }
 
+            }
+
+            AnimatedVisibility(
+                visible = buttonsVisible,
+
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
+
             // Botón volver
             Button(
                 onClick = { navController.popBackStack() },
@@ -133,6 +160,8 @@ fun Login(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Volver", fontSize = 18.sp)
+            }
+
             }
         }
     }
