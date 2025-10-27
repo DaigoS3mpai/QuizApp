@@ -74,5 +74,13 @@ dependencies {
     implementation("com.github.yalantis:ucrop:2.2.8")
     implementation("io.coil-kt:coil-compose:2.7.0")
 
+    //SQLITE
+    implementation("androidx.room:room-runtime:2.6.1")    // <-- NUEVO
+    implementation("androidx.room:room-ktx:2.6.1")
+
+    ksp("androidx.room:room-compiler:2.6.1") // <-- NUEVO
+
+
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 
 }

@@ -1,5 +1,6 @@
 package com.example.quizapp.ui.viewmodel
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
@@ -21,7 +22,8 @@ data class LoginUiState(
     val isSubmitting: Boolean = false,
     val canSubmit: Boolean = false,
     val success: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
+    val profileImage: Bitmap? = null // Nuevo: imagen de perfil
 )
 
 data class RegisterUiState(
@@ -36,7 +38,8 @@ data class RegisterUiState(
     val isSubmitting: Boolean = false,
     val canSubmit: Boolean = false,
     val success: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
+    val profileImageUri: Uri? = null
 )
 
 // ----------------- MODELO TEMPORAL DE USUARIO -----------------
@@ -121,6 +124,7 @@ class AuthViewModel : ViewModel() {
         recomputeRegisterCanSubmit()
     }
 
+
     fun onRegisterEmailChange(value: String) {
         _register.update { it.copy(email = value, emailError = validateEmail(value)) }
         recomputeRegisterCanSubmit()
@@ -181,5 +185,9 @@ class AuthViewModel : ViewModel() {
     fun addScoreToUser(identifier: String, points: Int) {
         val user = getCurrentUser(identifier)
         user?.score = user?.score?.plus(points) ?: 0
+    }
+    fun onProfileImageSelected(uri: Uri?) {
+        _register.update { it.copy(profileImageUri = uri) }
+        recomputeRegisterCanSubmit() // Opcional, si quieres que la imagen sea obligatoria
     }
 }
