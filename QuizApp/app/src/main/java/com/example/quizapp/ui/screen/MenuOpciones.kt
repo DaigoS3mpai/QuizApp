@@ -2,7 +2,6 @@ package com.example.quizapp.ui.screen
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
@@ -173,3 +172,4 @@ fun MenuPrincipalPreview() {
     val navController = rememberNavController()
     MenuOpciones(navController)
 }
+
