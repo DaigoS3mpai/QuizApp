@@ -1,15 +1,9 @@
 package com.example.quizapp.ui.screen
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.animate
+import androidx.compose.animation.*
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -45,12 +39,15 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
     val viewModel: QuizViewModel = viewModel(factory = QuizViewModelFactory(context))
     val state by viewModel.uiState.collectAsState()
 
+    var mostrarPerdiste by remember { mutableStateOf(false) }
+    var mostrarFelicidades by remember { mutableStateOf(false) }
+
     // ✅ Cargar preguntas solo una vez
     LaunchedEffect(Unit) {
         viewModel.cargarPreguntas(dificultadId = dificultadId, categoriaId = categoriaId)
     }
 
-    // 🕓 Progreso circular del temporizador
+    // 🕓 Progreso circular
     val totalTiempo = remember { mutableStateOf(30f) }
     val progreso = animateFloatAsState(
         targetValue = if (totalTiempo.value > 0) state.tiempoRestante / totalTiempo.value else 0f,
@@ -59,6 +56,41 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
     )
 
     Scaffold(topBar = { AppTopBar() }) { padding ->
+
+        // ❌ Cuadro “Perdiste”
+        if (mostrarPerdiste) {
+            AlertDialog(
+                onDismissRequest = {},
+                title = { Text("❌ Perdiste") },
+                text = { Text("Puntaje total: ${state.puntaje}") },
+                confirmButton = {
+                    Button(onClick = {
+                        mostrarPerdiste = false
+                        navController.popBackStack()
+                    }) {
+                        Text("Volver al menú")
+                    }
+                }
+            )
+        }
+
+        // 🎉 Cuadro “Felicidades”
+        if (mostrarFelicidades) {
+            AlertDialog(
+                onDismissRequest = {},
+                title = { Text("🎉 ¡Felicidades!") },
+                text = { Text("Completaste el quiz con ${state.puntaje} puntos 🏆") },
+                confirmButton = {
+                    Button(onClick = {
+                        mostrarFelicidades = false
+                        navController.popBackStack()
+                    }) {
+                        Text("Volver al menú")
+                    }
+                }
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -68,7 +100,7 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // 🕒 Círculo de temporizador
+            // 🕒 Temporizador circular
             if (!state.terminado && state.preguntaActual != null) {
                 totalTiempo.value = (state.tiempoRestante.takeIf { it > 0 } ?: 30).toFloat()
 
@@ -104,21 +136,13 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
                 }
             }
 
-            // 🌀 Estados: carga / error / quiz activo
             when {
                 state.preguntaActual == null && !state.terminado -> {
-                    Spacer(modifier = Modifier.height(100.dp))
                     CircularProgressIndicator(color = Color.Black)
-                    Text(
-                        text = "Cargando pregunta...",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+                    Text("Cargando pregunta...", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
 
                 state.terminado && state.preguntaActual == null -> {
-                    Spacer(modifier = Modifier.height(100.dp))
                     Text(
                         text = "⚠️ No se encontraron preguntas disponibles.",
                         fontSize = 22.sp,
@@ -131,13 +155,10 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
                             containerColor = Color(0xFF58B956),
                             contentColor = Color.Black
                         )
-                    ) {
-                        Text("Volver", fontSize = 20.sp)
-                    }
+                    ) { Text("Volver", fontSize = 20.sp) }
                 }
 
                 else -> {
-                    // 🎞 Transición animada entre preguntas
                     AnimatedContent(
                         targetState = state.preguntaActual,
                         transitionSpec = {
@@ -151,48 +172,29 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
-                                // 🖼 Imagen con fade-in y fix del smart cast
                                 val imagenBitmap = state.imagenBitmap
                                 if (imagenBitmap != null) {
-                                    var alphaAnim by remember { mutableStateOf(0f) }
-
-                                    // Animación de entrada
+                                    val alphaAnim = remember { Animatable(0f) }
                                     LaunchedEffect(imagenBitmap) {
-                                        alphaAnim = 0f
-                                        animate(
-                                            initialValue = 0f,
+                                        alphaAnim.snapTo(0f)
+                                        alphaAnim.animateTo(
                                             targetValue = 1f,
                                             animationSpec = tween(600)
-                                        ) { value, _ -> alphaAnim = value }
+                                        )
                                     }
-
                                     Image(
                                         bitmap = imagenBitmap.asImageBitmap(),
-                                        contentDescription = "Imagen de la pregunta",
+                                        contentDescription = null,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(220.dp)
-                                            .alpha(alphaAnim)
+                                            .alpha(alphaAnim.value)
                                             .background(Color.White, shape = RoundedCornerShape(16.dp)),
                                         contentScale = ContentScale.Crop
                                     )
-                                } else {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(220.dp)
-                                            .background(Color.White, shape = RoundedCornerShape(16.dp)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = "Cargando imagen...",
-                                            fontSize = 16.sp,
-                                            color = Color.Gray
-                                        )
-                                    }
                                 }
 
-                                // ❓ Texto de la pregunta
+                                // ❓ Texto de pregunta
                                 Text(
                                     text = it.nombre,
                                     fontSize = 22.sp,
@@ -200,10 +202,23 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
                                     color = Color.Black
                                 )
 
-                                // 🧠 Opciones
-                                state.opciones.forEach { opcion ->
+                                // 🔀 Opciones aleatorias
+                                val opcionesAleatorias = remember(it.id_pregunta) {
+                                    state.opciones.shuffled()
+                                }
+
+                                opcionesAleatorias.forEach { opcion ->
                                     Button(
-                                        onClick = { viewModel.responder(opcion) },
+                                        onClick = {
+                                            if (opcion.correcta == 0) {
+                                                mostrarPerdiste = true
+                                            } else if (
+                                                state.preguntaIndex >= state.totalPreguntas - 1
+                                            ) {
+                                                mostrarFelicidades = true
+                                            }
+                                            viewModel.responder(opcion)
+                                        },
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = Color(0xFF58B956),
@@ -216,33 +231,7 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
                                 }
 
                                 Spacer(modifier = Modifier.height(16.dp))
-
-                                // 🏆 Puntaje
-                                Text(
-                                    "Puntaje: ${state.puntaje}",
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-
-                                // 🎉 Fin del quiz
-                                if (state.terminado && state.preguntaIndex >= state.totalPreguntas - 1) {
-                                    Spacer(modifier = Modifier.height(20.dp))
-                                    Text(
-                                        text = "🎉 ¡Has completado el quiz!",
-                                        fontSize = 24.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Blue
-                                    )
-                                    Button(
-                                        onClick = { navController.popBackStack() },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(0xFF58B956),
-                                            contentColor = Color.Black
-                                        )
-                                    ) {
-                                        Text("Volver", fontSize = 20.sp)
-                                    }
-                                }
+                                Text("Puntaje: ${state.puntaje}", fontSize = 22.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }

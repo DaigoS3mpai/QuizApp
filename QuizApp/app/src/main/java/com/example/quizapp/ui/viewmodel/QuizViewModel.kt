@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.quizapp.data.database.AppDatabase
 import com.example.quizapp.data.opciones.OpcionesEntity
 import com.example.quizapp.data.pregunta.PreguntaEntity
+import com.example.quizapp.data.user.UserDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,12 +27,15 @@ data class QuizUiState(
     val terminado: Boolean = false
 )
 
-class QuizViewModel(private val context: Context) : ViewModel() {
+class QuizViewModel(context: Context) : ViewModel() {
 
-    private val db = AppDatabase.getInstance(context)
+    // ⚡ Evitar fuga de contexto
+    private val db by lazy { AppDatabase.getInstance(context.applicationContext) }
+
     private val preguntaDao = db.preguntaDao()
     private val opcionesDao = db.opcionesDao()
     private val dificultadDao = db.dificultadDao()
+    private val userDao: UserDao = db.usuarioDao() // ✅ usa la clase correcta
 
     private val _uiState = MutableStateFlow(QuizUiState())
     val uiState: StateFlow<QuizUiState> = _uiState
@@ -41,14 +45,15 @@ class QuizViewModel(private val context: Context) : ViewModel() {
     private var tiempoPorPregunta = 30
     private var multiplicadorPuntaje = 1
 
+    // ⚙️ Ajusta esto según tu sistema de sesión
+    private val currentUserId = 1
+
     fun cargarPreguntas(dificultadId: Int, categoriaId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            // 🔹 Cargar configuración de dificultad
             val dificultad = dificultadDao.getById(dificultadId)
             tiempoPorPregunta = dificultad?.tiempo_seg?.toIntOrNull() ?: 30
             multiplicadorPuntaje = dificultad?.multip_punt ?: 1
 
-            // 🔹 Cargar preguntas livianas y convertirlas a PreguntaEntity sin imagen
             var preguntasLite = preguntaDao.getPreguntasLivianasPorDificultadYCategoria(dificultadId, categoriaId)
             var intentos = 0
 
@@ -58,11 +63,10 @@ class QuizViewModel(private val context: Context) : ViewModel() {
                 intentos++
             }
 
-            // 🔹 Convertir PreguntaLite → PreguntaEntity (imagen vacía por eficiencia)
             preguntasDisponibles = preguntasLite.map { lite ->
                 PreguntaEntity(
                     id_pregunta = lite.id_pregunta,
-                    imagen = ByteArray(0), // placeholder para evitar carga inicial pesada
+                    imagen = ByteArray(0),
                     nombre = lite.nombre,
                     puntaje = lite.puntaje,
                     estado_id_estado = lite.estado_id_estado,
@@ -81,6 +85,7 @@ class QuizViewModel(private val context: Context) : ViewModel() {
 
     private fun mostrarPregunta(index: Int) {
         if (index >= preguntasDisponibles.size) {
+            guardarPuntajeEnPerfil(_uiState.value.puntaje)
             _uiState.update { it.copy(terminado = true) }
             return
         }
@@ -89,12 +94,8 @@ class QuizViewModel(private val context: Context) : ViewModel() {
 
         viewModelScope.launch(Dispatchers.IO) {
             val opciones = opcionesDao.getOpcionesPorPregunta(pregunta.id_pregunta).shuffled()
-
-            // 🔹 Cargar la imagen real solo cuando sea necesaria
             val imagenBytes = preguntaDao.getImagenPorId(pregunta.id_pregunta)
-            val imagenBitmap = imagenBytes?.let {
-                BitmapFactory.decodeByteArray(it, 0, it.size)
-            }
+            val imagenBitmap = imagenBytes?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
 
             _uiState.update {
                 it.copy(
@@ -118,10 +119,7 @@ class QuizViewModel(private val context: Context) : ViewModel() {
             for (i in tiempoPorPregunta downTo 0) {
                 delay(1000)
                 _uiState.update { it.copy(tiempoRestante = i) }
-
-                if (i == 0) {
-                    siguientePregunta()
-                }
+                if (i == 0) siguientePregunta()
             }
         }
     }
@@ -146,6 +144,22 @@ class QuizViewModel(private val context: Context) : ViewModel() {
 
     private fun siguientePregunta() {
         val nextIndex = _uiState.value.preguntaIndex + 1
-        mostrarPregunta(nextIndex)
+        if (nextIndex >= preguntasDisponibles.size) {
+            guardarPuntajeEnPerfil(_uiState.value.puntaje)
+            _uiState.update { it.copy(terminado = true) }
+        } else {
+            mostrarPregunta(nextIndex)
+        }
+    }
+
+    // ✅ Guarda el puntaje del usuario en su perfil
+    private fun guardarPuntajeEnPerfil(puntajeObtenido: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val usuario = userDao.getById(currentUserId)
+            usuario?.let {
+                userDao.actualizarPuntaje(it.idUsuario, puntajeObtenido)
+                userDao.sumarPuntajeGlobal(it.idUsuario, puntajeObtenido)
+            }
+        }
     }
 }
