@@ -14,4 +14,7 @@ interface CategoriaDao {
 
     @Query("SELECT COUNT(*) FROM Categoria")
     suspend fun count(): Int
+
+    @Query("SELECT * FROM Categoria")
+    suspend fun getAll(): List<CategoriaEntity>
 }

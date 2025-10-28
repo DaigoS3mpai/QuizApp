@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 
-
 @Dao
 interface EstadoDao {
     @Insert
@@ -15,4 +14,7 @@ interface EstadoDao {
 
     @Query("SELECT COUNT(*) FROM Estado")
     suspend fun count(): Int
+
+    @Query("SELECT * FROM Estado")
+    suspend fun getAll(): List<EstadoEntity>
 }

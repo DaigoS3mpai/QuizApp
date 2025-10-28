@@ -1,7 +1,9 @@
 package com.example.quizapp.data.pregunta
+
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.quizapp.data.categoria.CategoriaEntity
 import com.example.quizapp.data.dificultad.DificultadEntity
@@ -28,14 +30,33 @@ import com.example.quizapp.data.estado.EstadoEntity
             childColumns = ["Dificultad_id_dificultad"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        Index(value = ["Estado_id_estado"]),
+        Index(value = ["Categoria_id_categoria"]),
+        Index(value = ["Dificultad_id_dificultad"])
     ]
 )
 data class PreguntaEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id_pregunta") val id_pregunta: Int = 0,
-    @ColumnInfo(name = "imagen") val imagen: ByteArray,
-    @ColumnInfo(name = "nombre") val nombre: String,
-    @ColumnInfo(name = "puntaje") val puntaje: Int,
-    @ColumnInfo(name = "Estado_id_estado") val estado_id_estado: Int,
-    @ColumnInfo(name = "Categoria_id_categoria") val categoria_id_categoria: Int,
-    @ColumnInfo(name = "Dificultad_id_dificultad") val dificultad_id_dificultad: Int
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id_pregunta")
+    val id_pregunta: Int = 0,
+
+    @ColumnInfo(name = "imagen", typeAffinity = ColumnInfo.BLOB)
+    val imagen: ByteArray,
+
+    @ColumnInfo(name = "nombre")
+    val nombre: String,
+
+    @ColumnInfo(name = "puntaje")
+    val puntaje: Int,
+
+    @ColumnInfo(name = "Estado_id_estado")
+    val estado_id_estado: Int,
+
+    @ColumnInfo(name = "Categoria_id_categoria")
+    val categoria_id_categoria: Int,
+
+    @ColumnInfo(name = "Dificultad_id_dificultad")
+    val dificultad_id_dificultad: Int
 )

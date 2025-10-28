@@ -6,7 +6,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,10 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,27 +31,24 @@ import com.example.quizapp.ui.viewmodel.AuthViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Login(
+fun Password(
     navController: NavHostController
 ) {
     val context = LocalContext.current
-    val viewModel: AuthViewModel = viewModel(
-        factory = AuthViewModelFactory(context)
-    )
+    val viewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(context))
+    val state by viewModel.password.collectAsState()
 
-    val state by viewModel.login.collectAsState()
     var buttonsVisible by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
+    var confirmVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        buttonsVisible = true
-    }
+    LaunchedEffect(Unit) { buttonsVisible = true }
 
     LaunchedEffect(state.success) {
         if (state.success) {
-            viewModel.clearLoginResult()
-            navController.navigate(Route.MenuOpciones.path) {
-                popUpTo(Route.Login.path) { inclusive = true }
+            viewModel.clearPasswordResult()
+            navController.navigate(Route.Login.path) {
+                popUpTo(Route.Password.path) { inclusive = true }
             }
         }
     }
@@ -71,22 +65,19 @@ fun Login(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Logo
             Image(
                 painter = painterResource(R.drawable.logo),
                 contentDescription = "Logo Aplicación",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
-                    .padding(bottom = 16.dp),
+                    .height(200.dp),
                 contentScale = ContentScale.Fit
             )
 
-            // Campo usuario / correo
             OutlinedTextField(
                 value = state.email,
-                onValueChange = viewModel::onLoginEmailChange,
-                label = { Text("Usuario o correo") },
+                onValueChange = viewModel::onPasswordEmailChange,
+                label = { Text("Correo o usuario") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 isError = state.emailError != null,
@@ -95,11 +86,10 @@ fun Login(
                 }
             )
 
-            // Campo contraseña con botón mostrar / ocultar
             OutlinedTextField(
-                value = state.pass,
-                onValueChange = viewModel::onLoginPassChange,
-                label = { Text("Contraseña") },
+                value = state.newPass,
+                onValueChange = viewModel::onPasswordNewPassChange,
+                label = { Text("Nueva contraseña") },
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -110,12 +100,33 @@ fun Login(
                         Text(if (passwordVisible) "Ocultar" else "Mostrar", fontSize = 12.sp)
                     }
                 },
+                modifier = Modifier.fillMaxWidth(),
+                isError = state.newPassError != null,
+                supportingText = {
+                    state.newPassError?.let { Text(it, color = Color.Red, fontSize = 12.sp) }
+                }
+            )
+
+            OutlinedTextField(
+                value = state.confirmPass,
+                onValueChange = viewModel::onPasswordConfirmChange,
+                label = { Text("Confirmar contraseña") },
+                singleLine = true,
+                visualTransformation = if (confirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    TextButton(
+                        onClick = { confirmVisible = !confirmVisible },
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text(if (confirmVisible) "Ocultar" else "Mostrar", fontSize = 12.sp)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp, bottom = 16.dp),
-                isError = state.passError != null,
+                isError = state.confirmPassError != null,
                 supportingText = {
-                    state.passError?.let { Text(it, color = Color.Red, fontSize = 12.sp) }
+                    state.confirmPassError?.let { Text(it, color = Color.Red, fontSize = 12.sp) }
                 }
             )
 
@@ -124,38 +135,22 @@ fun Login(
                 enter = scaleIn(animationSpec = tween(500, delayMillis = 100)),
                 exit = scaleOut(animationSpec = tween(500))
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Botón iniciar sesión
+                Column {
                     Button(
-                        onClick = { viewModel.submitLogin() },
-                        enabled = state.canSubmit && !state.isSubmitting,
+                        onClick = { viewModel.submitPasswordReset() },
+                        enabled = !state.isSubmitting,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF58B956),
                             contentColor = Color.Black
                         ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = if (state.isSubmitting) "Iniciando..." else "Iniciar Sesión",
+                            text = if (state.isSubmitting) "Actualizando..." else "Actualizar contraseña",
                             fontSize = 18.sp
                         )
                     }
 
-                    // 🔹 Texto "¿Olvidaste tu contraseña?"
-                    Text(
-                        text = "¿Olvidaste tu contraseña?",
-                        color = Color.Black,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .clickable { navController.navigate(Route.Password.path) },
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    // Mensaje de error
                     state.errorMsg?.let {
                         Text(
                             text = it,
@@ -165,9 +160,8 @@ fun Login(
                         )
                     }
 
-                    // Botón volver
                     Button(
-                        onClick = { navController.navigate(Route.MenuInicioSesion.path) },
+                        onClick = { navController.popBackStack() },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF58B956),
                             contentColor = Color.Black
@@ -186,7 +180,7 @@ fun Login(
 
 @Preview(showBackground = true)
 @Composable
-fun LoginScreenPreview() {
+fun PasswordScreenPreview() {
     val navController = rememberNavController()
-    Login(navController)
+    Password(navController)
 }

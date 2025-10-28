@@ -1,4 +1,5 @@
 package com.example.quizapp.data.user
+
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -12,23 +13,43 @@ import com.example.quizapp.data.rol.RolEntity
         ForeignKey(
             entity = RolEntity::class,
             parentColumns = ["id_rol"],
-            childColumns = ["Rol_id_rol"],
+            childColumns = ["rol_id_rol"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = EstadoEntity::class,
             parentColumns = ["id_estado"],
-            childColumns = ["Estado_id_estado"],
+            childColumns = ["estado_id_estado"],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class UserEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id_usuario") val id_usuario: Int = 0,
-    @ColumnInfo(name = "nombre") val nombre: String,
-    @ColumnInfo(name = "correo") val correo: String,
-    @ColumnInfo(name = "clave") val clave: String,
-    @ColumnInfo(name = "foto_perfil") val foto_perfil: ByteArray,
-    @ColumnInfo(name = "Rol_id_rol") val rol_id_rol: Int,
-    @ColumnInfo(name = "Estado_id_estado") val estado_id_estado: Int
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id_usuario")
+    val idUsuario: Int = 0,
+
+    @ColumnInfo(name = "nombre")
+    val nombre: String,
+
+    @ColumnInfo(name = "correo")
+    val correo: String,
+
+    @ColumnInfo(name = "clave")
+    val clave: String,
+
+    @ColumnInfo(name = "foto_perfil")
+    val fotoPerfil: ByteArray,
+
+    @ColumnInfo(name = "rol_id_rol")
+    val idRol: Int,
+
+    @ColumnInfo(name = "estado_id_estado")
+    val idEstado: Int,
+
+    @ColumnInfo(name = "puntaje") val puntaje: Int = 0,
+
+    @ColumnInfo(name = "puntaje_global") val puntaje_global: Int = 0
+
+
 )

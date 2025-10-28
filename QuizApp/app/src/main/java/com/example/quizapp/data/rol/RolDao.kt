@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 
-
 @Dao
 interface RolDao {
     @Insert
@@ -15,4 +14,7 @@ interface RolDao {
 
     @Query("SELECT COUNT(*) FROM Rol")
     suspend fun count(): Int
+
+    @Query("SELECT * FROM Rol")
+    suspend fun getAll(): List<RolEntity>
 }

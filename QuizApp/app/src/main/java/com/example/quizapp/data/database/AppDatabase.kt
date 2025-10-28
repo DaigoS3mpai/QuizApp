@@ -1,10 +1,12 @@
 package com.example.quizapp.data.database
 
-import android.content.Context                                  // Contexto para construir DB
-import androidx.room.Database                                   // Anotación @Database
-import androidx.room.Room                                       // Builder de DB
-import androidx.room.RoomDatabase                               // Clase base de DB
-import androidx.sqlite.db.SupportSQLiteDatabase                 // Tipo del callback onCreate
+import android.content.Context
+import android.util.Log
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.quizapp.data.*
 import com.example.quizapp.data.categoria.CategoriaDao
 import com.example.quizapp.data.categoria.CategoriaEntity
 import com.example.quizapp.data.dificultad.DificultadDao
@@ -19,15 +21,13 @@ import com.example.quizapp.data.pregunta.PreguntaDao
 import com.example.quizapp.data.pregunta.PreguntaEntity
 import com.example.quizapp.data.rol.RolDao
 import com.example.quizapp.data.rol.RolEntity
-
 import com.example.quizapp.data.user.UserDao
 import com.example.quizapp.data.user.UserEntity
-import kotlinx.coroutines.CoroutineScope                        // Para corrutinas en callback
-import kotlinx.coroutines.Dispatchers                           // Dispatcher IO
-import kotlinx.coroutines.launch                                // Lanzar corrutina
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-// @Database registra entidades y versión del esquema.
-// version = 1: como es primera inclusión, partimos en 1.
 @Database(
     entities = [
         CategoriaEntity::class,
@@ -39,12 +39,12 @@ import kotlinx.coroutines.launch                                // Lanzar corrut
         OpcionesEntity::class,
         PartidaEntity::class
     ],
-    version = 1,
-    exportSchema = true // Mantener true para inspección de esquema (útil en educación)
+    version = 13, // 🔹 Nueva versión para forzar recreación limpia
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    // Exponemos los DAOs
+    // 🔹 Declaración de DAOs
     abstract fun categoriaDao(): CategoriaDao
     abstract fun dificultadDao(): DificultadDao
     abstract fun estadoDao(): EstadoDao
@@ -56,40 +56,94 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         @Volatile
-        private var INSTANCE: AppDatabase? = null              // Instancia singleton
-        private const val DB_NAME = "db_appSQLITE.db"          // Nombre del archivo .db
+        private var INSTANCE: AppDatabase? = null
+        private const val DB_NAME = "db_appSQLITE.db"
+        private const val TAG = "AppDatabaseInit"
 
-        // Obtiene la instancia única de la base
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                // Construimos la DB con callback de precarga
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DB_NAME
                 )
-                    // Callback para ejecutar cuando la DB se crea por primera vez
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
-                            // Lanzamos una corrutina en IO para insertar datos iniciales
-                            CoroutineScope(Dispatchers.IO).launch {
-                                val instance = getInstance(context)
+                            Log.d(TAG, "🟢 Creando base y agregando datos base...")
 
-                                // Precarga de datos iniciales (ejemplo, ajusta según tus necesidades)
-                                // Reemplaza con datos de prueba para tu BD
-                                // Ejemplo para Categoria
-                                instance.categoriaDao().insert(CategoriaEntity(id_categoria = 1, nombre_categoria = "Arte"))
-                                // Añade más para otras tablas
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val database = getInstance(context)
+                                val rolDao = database.rolDao()
+                                val estadoDao = database.estadoDao()
+                                val categoriaDao = database.categoriaDao()
+                                val dificultadDao = database.dificultadDao()
+
+                                try {
+                                    // Esperar para asegurar que Room haya creado las tablas
+                                    delay(800)
+
+                                    // --- ROL ---
+                                    rolDao.insert(RolEntity(id_rol = 1, nombre = "Usuario"))
+                                    rolDao.insert(RolEntity(id_rol = 2, nombre = "Administrador"))
+                                    Log.d(TAG, "✅ Roles base insertados (Usuario / Administrador)")
+
+                                    // --- ESTADO ---
+                                    estadoDao.insert(EstadoEntity(id_estado = 1, nombre = "Activo"))
+                                    estadoDao.insert(EstadoEntity(id_estado = 2, nombre = "Inactivo"))
+                                    Log.d(TAG, "✅ Estados base insertados (Activo / Inactivo)")
+
+                                    // --- CATEGORÍA ---
+                                    categoriaDao.insert(CategoriaEntity(id_categoria = 1, nombre_categoria = "Arte"))
+                                    categoriaDao.insert(CategoriaEntity(id_categoria = 2, nombre_categoria = "Deporte"))
+                                    categoriaDao.insert(CategoriaEntity(id_categoria = 3, nombre_categoria = "Historia"))
+                                    categoriaDao.insert(CategoriaEntity(id_categoria = 4, nombre_categoria = "Cine"))
+                                    Log.d(TAG, "✅ Categorías base insertadas")
+
+                                    // --- DIFICULTAD ---
+                                    dificultadDao.insert(
+                                        DificultadEntity(
+                                            id_dificultad = 1,
+                                            nombre_dificultad = "Fácil",
+                                            tiempo_seg = "30",   // 🔸 tipo String según tu entidad
+                                            multip_punt = 1
+                                        )
+                                    )
+                                    dificultadDao.insert(
+                                        DificultadEntity(
+                                            id_dificultad = 2,
+                                            nombre_dificultad = "Medio",
+                                            tiempo_seg = "20",
+                                            multip_punt = 2
+                                        )
+                                    )
+                                    dificultadDao.insert(
+                                        DificultadEntity(
+                                            id_dificultad = 3,
+                                            nombre_dificultad = "Difícil",
+                                            tiempo_seg = "10",
+                                            multip_punt = 3
+                                        )
+                                    )
+                                    Log.d(TAG, "✅ Dificultades base insertadas")
+
+                                    Log.d(TAG, "🎉 Datos base creados exitosamente")
+
+                                    // --- LLAMAR AL SEEDER ---
+                                    Log.d(TAG, "🚀 Ejecutando DatabaseSeeder para preguntas y opciones...")
+                                    DatabaseSeeder.seed(context, database)
+
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "❌ Error al crear datos base: ${e.message}")
+                                }
                             }
                         }
                     })
-                    // En entorno educativo, si cambias versión sin migraciones, destruye y recrea.
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration() // 🔹 Recrar si cambia el esquema
                     .build()
 
-                INSTANCE = instance                             // Guarda la instancia
-                instance                                        // Devuelve la instancia
+                INSTANCE = instance
+                instance
             }
         }
     }

@@ -24,11 +24,14 @@ import com.example.quizapp.ui.component.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Selecion(navController: NavHostController) {
+fun CategoriaScreen(navController: NavHostController, dificultadId: Int) {
     var buttonsVisible by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) { buttonsVisible = true }
 
-    Scaffold(topBar = { AppTopBar() }) { innerPadding ->
+    Scaffold(
+        topBar = { AppTopBar() }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -38,48 +41,52 @@ fun Selecion(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🖼 Logo
+            // 🖼️ Logo
             Image(
                 painter = painterResource(R.drawable.logo),
                 contentDescription = "Logo Aplicación",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp),
+                    .height(220.dp),
                 contentScale = ContentScale.Fit
             )
 
-            val dificultades = listOf(
-                "Fácil" to 1,
-                "Normal" to 2,
-                "Difícil" to 3
+            // 📚 Lista de categorías
+            val categorias = listOf(
+                "Arte" to 1,
+                "Deporte" to 2,
+                "Historia" to 3,
+                "Cine" to 4
             )
 
-            // 🎮 Botones de dificultad
-            dificultades.forEachIndexed { index, (nombre, idDificultad) ->
+            categorias.forEachIndexed { index, (nombre, idCategoria) ->
                 AnimatedVisibility(
                     visible = buttonsVisible,
-                    enter = scaleIn(animationSpec = tween(500, delayMillis = index * 100)),
+                    enter = scaleIn(animationSpec = tween(400, delayMillis = index * 100)),
                     exit = scaleOut(animationSpec = tween(300))
                 ) {
                     Button(
-                        onClick = { navController.navigate("Categoria/$idDificultad") },
+                        onClick = {
+                            // 🔹 Navegación dinámica según dificultad y categoría
+                            navController.navigate("QuizFacil/$dificultadId/$idCategoria")
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF58B956),
                             contentColor = Color.Black
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(nombre, fontSize = 25.sp)
+                        Text(nombre, fontSize = 22.sp)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             // 🔙 Botón volver
             AnimatedVisibility(
                 visible = buttonsVisible,
-                enter = scaleIn(animationSpec = tween(500, delayMillis = 400)),
+                enter = scaleIn(animationSpec = tween(400, delayMillis = 400)),
                 exit = scaleOut(animationSpec = tween(300))
             ) {
                 Button(
@@ -90,7 +97,7 @@ fun Selecion(navController: NavHostController) {
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Volver", fontSize = 25.sp)
+                    Text("Volver", fontSize = 22.sp)
                 }
             }
         }
@@ -99,7 +106,7 @@ fun Selecion(navController: NavHostController) {
 
 @Preview(showBackground = true)
 @Composable
-fun SelecionPreview() {
+fun CategoriaScreenPreview() {
     val navController = rememberNavController()
-    Selecion(navController)
+    CategoriaScreen(navController, dificultadId = 1)
 }
