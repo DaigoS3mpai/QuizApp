@@ -6,12 +6,12 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.quizapp.data.database.AppDatabase
 import com.example.quizapp.data.user.UserDao
 import com.example.quizapp.data.user.UserEntity
+import com.example.quizapp.utils.sessionDataStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,9 +22,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-
-// ----------------- EXTENSIÓN PARA DATASTORE -----------------
-private val Context.dataStore by preferencesDataStore("session_prefs")
 
 // ----------------- ESTADOS DE UI -----------------
 
@@ -162,11 +159,9 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         _register.update {
             it.copy(
                 email = value,
-                emailError = if (value.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(
-                        value
-                    )
-                        .matches()
-                ) "Correo inválido" else null
+                emailError = if (value.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(value).matches())
+                    "Correo inválido"
+                else null
             )
         }
         recomputeRegisterCanSubmit()
@@ -224,8 +219,6 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-
-
     fun submitRegister() {
         val s = _register.value
         if (!s.canSubmit || s.isSubmitting) return
@@ -233,7 +226,6 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             _register.update { it.copy(isSubmitting = true, errorMsg = null, success = false) }
 
-            // ✅ Espera breve para asegurar que la DB ya creó los roles/estados base
             delay(1500)
 
             val existingUser = userDao.login(s.email.trim(), s.pass.trim())
@@ -254,8 +246,8 @@ class AuthViewModel(private val context: Context) : ViewModel() {
                 correo = s.email.trim(),
                 clave = s.pass.trim(),
                 fotoPerfil = imageBytes ?: ByteArray(0),
-                idRol = 1,           // ✅ Rol por defecto: Usuario
-                idEstado = 1,        // ✅ Estado por defecto: Activo
+                idRol = 1,
+                idEstado = 1,
                 puntaje = 0,
                 puntaje_global = 0
             )
@@ -321,7 +313,6 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-
     // ----------------- CONVERSIÓN IMAGEN -----------------
 
     private fun uriToByteArray(uri: Uri?): ByteArray? {
@@ -341,20 +332,19 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-
     // ----------------- DATASTORE (SESIÓN PERSISTENTE) -----------------
 
     private suspend fun saveSession(userId: Int) {
-        context.dataStore.edit { prefs -> prefs[USER_ID_KEY] = userId }
+        context.sessionDataStore.edit { prefs -> prefs[USER_ID_KEY] = userId }
     }
 
     private suspend fun clearSession() {
-        context.dataStore.edit { it.clear() }
+        context.sessionDataStore.edit { it.clear() }
     }
 
     fun loadSession() {
         viewModelScope.launch(Dispatchers.IO) {
-            val userId = context.dataStore.data.map { it[USER_ID_KEY] ?: -1 }.first()
+            val userId = context.sessionDataStore.data.map { it[USER_ID_KEY] ?: -1 }.first()
             if (userId != -1) {
                 val user = userDao.getById(userId)
                 if (user != null) withContext(Dispatchers.Main) { setCurrentUser(user) }
@@ -362,10 +352,10 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-// ----------------- OLVIDAR CONTRASEÑA -----------------
+    // ----------------- OLVIDAR CONTRASEÑA -----------------
 
     data class PasswordUiState(
-        val email: String = "",          // puede ser correo o nombre de usuario
+        val email: String = "",
         val newPass: String = "",
         val confirmPass: String = "",
         val emailError: String? = null,
@@ -427,7 +417,6 @@ class AuthViewModel(private val context: Context) : ViewModel() {
             _password.update { it.copy(isSubmitting = true, errorMsg = null, success = false) }
 
             try {
-                // ✅ Buscar usuario sin contraseña (por correo o nombre)
                 val user = userDao.findByEmailOrUsername(s.email.trim())
 
                 if (user == null) {
@@ -437,7 +426,6 @@ class AuthViewModel(private val context: Context) : ViewModel() {
                     return@launch
                 }
 
-                // ✅ Actualizar contraseña
                 val updated = userDao.updatePasswordByIdentifier(s.email.trim(), s.newPass.trim())
 
                 withContext(Dispatchers.Main) {
@@ -466,4 +454,3 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         _password.update { PasswordUiState() }
     }
 }
-

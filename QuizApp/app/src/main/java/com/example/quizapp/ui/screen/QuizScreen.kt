@@ -38,11 +38,11 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
     val context = LocalContext.current
     val viewModel: QuizViewModel = viewModel(factory = QuizViewModelFactory(context))
     val state by viewModel.uiState.collectAsState()
+    val mostrarPerdiste by viewModel.mostrarPerdiste.collectAsState()
 
-    var mostrarPerdiste by remember { mutableStateOf(false) }
     var mostrarFelicidades by remember { mutableStateOf(false) }
 
-    // ✅ Cargar preguntas solo una vez
+    // ✅ Cargar preguntas una sola vez
     LaunchedEffect(Unit) {
         viewModel.cargarPreguntas(dificultadId = dificultadId, categoriaId = categoriaId)
     }
@@ -64,10 +64,13 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
                 title = { Text("❌ Perdiste") },
                 text = { Text("Puntaje total: ${state.puntaje}") },
                 confirmButton = {
-                    Button(onClick = {
-                        mostrarPerdiste = false
-                        navController.popBackStack()
-                    }) {
+                    Button(
+                        onClick = { navController.popBackStack() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDF3C3C),
+                            contentColor = Color.White
+                        )
+                    ) {
                         Text("Volver al menú")
                     }
                 }
@@ -211,10 +214,9 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
                                     Button(
                                         onClick = {
                                             if (opcion.correcta == 0) {
-                                                mostrarPerdiste = true
-                                            } else if (
-                                                state.preguntaIndex >= state.totalPreguntas - 1
-                                            ) {
+                                                // ❌ Mostrar “Perdiste”
+                                                // (el ViewModel también lo marca internamente)
+                                            } else if (state.preguntaIndex >= state.totalPreguntas - 1) {
                                                 mostrarFelicidades = true
                                             }
                                             viewModel.responder(opcion)
@@ -231,7 +233,11 @@ fun QuizScreen(navController: NavHostController, dificultadId: Int, categoriaId:
                                 }
 
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text("Puntaje: ${state.puntaje}", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                Text(
+                                    "Puntaje: ${state.puntaje}",
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }

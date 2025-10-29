@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
         OpcionesEntity::class,
         PartidaEntity::class
     ],
-    version = 13, // 🔹 Nueva versión para forzar recreación limpia
+    version = 15, // 🔹 Nueva versión para forzar recreación limpia
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {

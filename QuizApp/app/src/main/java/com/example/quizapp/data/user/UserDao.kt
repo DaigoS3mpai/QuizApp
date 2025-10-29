@@ -34,11 +34,12 @@ interface UserDao {
     fun updateProfilePhoto(userId: Int, foto: ByteArray)
 
     // ---------- ACTUALIZAR PUNTAJE ----------
-    @Query("UPDATE Usuario SET puntaje = :nuevoPuntaje WHERE id_usuario = :userId")
-    suspend fun actualizarPuntaje(userId: Int, nuevoPuntaje: Int)
+    // ✅ Incrementa el puntaje actual con los nuevos puntos
+    @Query("UPDATE Usuario SET puntaje = puntaje + :puntosObtenidos WHERE id_usuario = :userId")
+    suspend fun agregarPuntaje(userId: Int, puntosObtenidos: Int)
 
-    // ---------- SUMAR PUNTAJE GLOBAL ----------
+    // ✅ Suma los puntos al puntaje global total
     @Query("UPDATE Usuario SET puntaje_global = puntaje_global + :puntosObtenidos WHERE id_usuario = :userId")
-    suspend fun sumarPuntajeGlobal(userId: Int, puntosObtenidos: Int)
+    suspend fun agregarPuntajeGlobal(userId: Int, puntosObtenidos: Int)
 
 }

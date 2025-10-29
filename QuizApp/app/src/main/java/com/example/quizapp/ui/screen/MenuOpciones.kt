@@ -172,4 +172,3 @@ fun MenuPrincipalPreview() {
     val navController = rememberNavController()
     MenuOpciones(navController)
 }
-
