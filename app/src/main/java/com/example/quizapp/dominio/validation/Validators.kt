@@ -12,9 +12,11 @@ fun validateEmail(email: String): String? {                            // Retorn
 // Nombre de Usuario
 fun validateNameLettersOnly(name: String): String? {                   // Valida nombre
     if (name.isBlank()) return "El nombre es obligatorio"              // Regla 1: no vacío
+    if (name.length < 6) return "Mínimo 6 caracteres"                  // Largo mínimo
 
     val regex = Regex("^[A-Za-zÁÉÍÓÚÑáéíóúñ0-9]+$")                      // Regla 2: solo letras y numeros
     return if (!regex.matches(name)) "Solo letras y numeros" else null// Mensaje si falla
+
 
 }
 

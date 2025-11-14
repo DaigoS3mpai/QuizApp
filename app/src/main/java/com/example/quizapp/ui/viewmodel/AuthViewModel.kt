@@ -11,6 +11,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.quizapp.data.database.AppDatabase
 import com.example.quizapp.data.user.UserDao
 import com.example.quizapp.data.user.UserEntity
+import com.example.quizapp.domain.validation.validateConfirm
+import com.example.quizapp.domain.validation.validateEmail
+import com.example.quizapp.domain.validation.validateNameLettersOnly
+import com.example.quizapp.domain.validation.validateStrongPassword
 import com.example.quizapp.utils.sessionDataStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -86,7 +90,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         _login.update {
             it.copy(
                 email = value,
-                emailError = if (value.isBlank()) "El correo es obligatorio" else null
+                emailError = validateEmail(value)
             )
         }
         recomputeLoginCanSubmit()
@@ -106,8 +110,10 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         val s = _login.value
         _login.update {
             it.copy(
-                canSubmit = s.emailError == null && s.passError == null &&
-                        s.email.isNotBlank() && s.pass.isNotBlank()
+                canSubmit = s.emailError == null &&
+                        s.passError == null &&
+                        s.email.isNotBlank() &&
+                        s.pass.isNotBlank()
             )
         }
     }
@@ -149,7 +155,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         _register.update {
             it.copy(
                 name = value,
-                nameError = if (value.isBlank()) "El nombre es obligatorio" else null
+                nameError = validateNameLettersOnly(value)
             )
         }
         recomputeRegisterCanSubmit()
@@ -159,9 +165,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         _register.update {
             it.copy(
                 email = value,
-                emailError = if (value.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(value).matches())
-                    "Correo inválido"
-                else null
+                emailError = validateEmail(value)
             )
         }
         recomputeRegisterCanSubmit()
@@ -171,31 +175,43 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         _register.update {
             it.copy(
                 pass = value,
-                passError = if (value.length < 6) "Mínimo 6 caracteres" else null
+                passError = validateStrongPassword(value)
             )
         }
-        _register.update { it.copy(confirmError = validateConfirm(it.pass, it.confirm)) }
+        _register.update {
+            it.copy(
+                confirmError = validateConfirm(it.pass, it.confirm)
+            )
+        }
         recomputeRegisterCanSubmit()
     }
 
     fun onConfirmChange(value: String) {
         _register.update {
-            it.copy(confirm = value, confirmError = validateConfirm(it.pass, value))
+            it.copy(
+                confirm = value,
+                confirmError = validateConfirm(it.pass, value)
+            )
         }
         recomputeRegisterCanSubmit()
     }
 
-    private fun validateConfirm(pass: String, confirm: String): String? {
-        return if (confirm != pass) "Las contraseñas no coinciden" else null
-    }
-
     private fun recomputeRegisterCanSubmit() {
         val s = _register.value
-        val noErrors =
-            listOf(s.nameError, s.emailError, s.passError, s.confirmError).all { it == null }
-        val filled =
-            s.name.isNotBlank() && s.email.isNotBlank() && s.pass.isNotBlank() && s.confirm.isNotBlank()
-        _register.update { it.copy(canSubmit = noErrors && filled) }
+
+        val noErrors = listOf(
+            s.nameError,
+            s.emailError,
+            s.passError,
+            s.confirmError
+        ).all { it == null }
+
+        val filled = s.name.isNotBlank() && s.email.isNotBlank() &&
+                s.pass.isNotBlank() && s.confirm.isNotBlank()
+
+        _register.update {
+            it.copy(canSubmit = noErrors && filled)
+        }
     }
 
     fun onProfileImageSelected(uri: Uri?) {
@@ -206,12 +222,9 @@ class AuthViewModel(private val context: Context) : ViewModel() {
 
                 val imageBytes = uriToByteArray(uri)
                 if (imageBytes != null) {
-                    println("✅ Guardando imagen para usuario ID=${user.id} (${imageBytes.size} bytes)")
                     userDao.updateProfilePhoto(user.id, imageBytes)
                     val bmp = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                     _currentUser.update { it.copy(photo = bmp) }
-                } else {
-                    println("⚠️ No se pudo convertir la imagen a bytes")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -228,19 +241,16 @@ class AuthViewModel(private val context: Context) : ViewModel() {
 
             delay(1500)
 
-            val existingUser = userDao.login(s.email.trim(), s.pass.trim())
+            val existingUser = userDao.findByEmailOrUsername(s.email.trim())
             if (existingUser != null) {
                 _register.update {
-                    it.copy(
-                        isSubmitting = false,
-                        success = false,
-                        errorMsg = "El usuario ya existe"
-                    )
+                    it.copy(isSubmitting = false, errorMsg = "El usuario ya existe")
                 }
                 return@launch
             }
 
             val imageBytes = uriToByteArray(s.profileImageUri)
+
             val newUser = UserEntity(
                 nombre = s.name.trim(),
                 correo = s.email.trim(),
@@ -255,26 +265,19 @@ class AuthViewModel(private val context: Context) : ViewModel() {
             try {
                 userDao.insert(newUser)
                 val inserted = userDao.login(newUser.correo, newUser.clave)
+
                 withContext(Dispatchers.Main) {
                     if (inserted != null) {
                         _register.update { it.copy(isSubmitting = false, success = true) }
                         setCurrentUser(inserted)
                         viewModelScope.launch { saveSession(inserted.idUsuario) }
                     } else {
-                        _register.update {
-                            it.copy(
-                                isSubmitting = false,
-                                errorMsg = "Error al registrar usuario"
-                            )
-                        }
+                        _register.update { it.copy(isSubmitting = false, errorMsg = "Error al registrar usuario") }
                     }
                 }
             } catch (e: Exception) {
                 _register.update {
-                    it.copy(
-                        isSubmitting = false,
-                        errorMsg = "Error de base de datos: ${e.message}"
-                    )
+                    it.copy(isSubmitting = false, errorMsg = "Error de base de datos: ${e.message}")
                 }
             }
         }
@@ -320,19 +323,18 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         return try {
             context.contentResolver.openInputStream(uri)?.use { input ->
                 val bmp = BitmapFactory.decodeStream(input)
-                if (bmp != null) {
-                    val output = ByteArrayOutputStream()
-                    bmp.compress(Bitmap.CompressFormat.PNG, 100, output)
-                    output.toByteArray()
-                } else null
+                bmp?.let {
+                    ByteArrayOutputStream().apply {
+                        it.compress(Bitmap.CompressFormat.PNG, 100, this)
+                    }.toByteArray()
+                }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
     }
 
-    // ----------------- DATASTORE (SESIÓN PERSISTENTE) -----------------
+    // ----------------- DATASTORE -----------------
 
     private suspend fun saveSession(userId: Int) {
         context.sessionDataStore.edit { prefs -> prefs[USER_ID_KEY] = userId }
@@ -373,7 +375,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         _password.update {
             it.copy(
                 email = value,
-                emailError = if (value.isBlank()) "Campo obligatorio" else null,
+                emailError = validateEmail(value),
                 errorMsg = null
             )
         }
@@ -383,7 +385,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         _password.update {
             it.copy(
                 newPass = value,
-                newPassError = if (value.length < 6) "Mínimo 6 caracteres" else null,
+                newPassError = validateStrongPassword(value),
                 confirmPassError = validateConfirm(value, it.confirmPass),
                 errorMsg = null
             )
@@ -404,11 +406,13 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         val s = _password.value
 
         if (s.isSubmitting) return
-        if (s.email.isBlank()) {
-            _password.update { it.copy(errorMsg = "Ingresa tu correo o nombre de usuario") }
+
+        if (s.emailError != null || s.email.isBlank()) {
+            _password.update { it.copy(errorMsg = "Ingresa un correo válido") }
             return
         }
-        if (s.newPassError != null || s.confirmPassError != null || s.newPass.isBlank() || s.confirmPass.isBlank()) {
+
+        if (s.newPassError != null || s.confirmPassError != null) {
             _password.update { it.copy(errorMsg = "Corrige los errores antes de continuar") }
             return
         }
@@ -421,7 +425,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
 
                 if (user == null) {
                     _password.update {
-                        it.copy(isSubmitting = false, errorMsg = "Usuario o correo no encontrado")
+                        it.copy(isSubmitting = false, errorMsg = "Usuario no encontrado")
                     }
                     return@launch
                 }
@@ -430,22 +434,15 @@ class AuthViewModel(private val context: Context) : ViewModel() {
 
                 withContext(Dispatchers.Main) {
                     if (updated > 0) {
-                        _password.update {
-                            it.copy(isSubmitting = false, success = true, errorMsg = null)
-                        }
+                        _password.update { it.copy(isSubmitting = false, success = true) }
                     } else {
                         _password.update {
-                            it.copy(
-                                isSubmitting = false,
-                                errorMsg = "Error al actualizar contraseña"
-                            )
+                            it.copy(isSubmitting = false, errorMsg = "Error al actualizar contraseña")
                         }
                     }
                 }
             } catch (e: Exception) {
-                _password.update {
-                    it.copy(isSubmitting = false, errorMsg = "Error: ${e.message}")
-                }
+                _password.update { it.copy(isSubmitting = false, errorMsg = e.message) }
             }
         }
     }
