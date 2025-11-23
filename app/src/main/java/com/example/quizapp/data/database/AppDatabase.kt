@@ -6,7 +6,6 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.quizapp.data.*
 import com.example.quizapp.data.categoria.CategoriaDao
 import com.example.quizapp.data.categoria.CategoriaEntity
 import com.example.quizapp.data.dificultad.DificultadDao
@@ -23,9 +22,10 @@ import com.example.quizapp.data.rol.RolDao
 import com.example.quizapp.data.rol.RolEntity
 import com.example.quizapp.data.user.UserDao
 import com.example.quizapp.data.user.UserEntity
+import com.example.quizapp.data.feedback.FeedbackDao
+import com.example.quizapp.data.feedback.FeedbackEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Database(
@@ -37,14 +37,14 @@ import kotlinx.coroutines.launch
         UserEntity::class,
         PreguntaEntity::class,
         OpcionesEntity::class,
-        PartidaEntity::class
+        PartidaEntity::class,
+        FeedbackEntity::class
     ],
-    version = 15, // 🔹 Nueva versión para forzar recreación limpia
+    version = 20,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    // 🔹 Declaración de DAOs
     abstract fun categoriaDao(): CategoriaDao
     abstract fun dificultadDao(): DificultadDao
     abstract fun estadoDao(): EstadoDao
@@ -53,93 +53,86 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun preguntaDao(): PreguntaDao
     abstract fun opcionesDao(): OpcionesDao
     abstract fun partidaDao(): PartidaDao
+    abstract fun feedbackDao(): FeedbackDao
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
         private const val DB_NAME = "db_appSQLITE.db"
-        private const val TAG = "AppDatabaseInit"
+        private const val TAG = "DB_INIT"
 
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
+
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DB_NAME
                 )
                     .addCallback(object : RoomDatabase.Callback() {
+
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
-                            Log.d(TAG, "🟢 Creando base y agregando datos base...")
 
+                            Log.d(TAG, "🟡 [SEED] Base creada. Iniciando inserción de datos base...")
+
+                            // AHORA: seeding ASÍNCRONO, sin bloquear la creación de la BD
                             CoroutineScope(Dispatchers.IO).launch {
-                                val database = getInstance(context)
-                                val rolDao = database.rolDao()
-                                val estadoDao = database.estadoDao()
-                                val categoriaDao = database.categoriaDao()
-                                val dificultadDao = database.dificultadDao()
+                                val database = INSTANCE
+                                if (database == null) {
+                                    Log.e(TAG, "❌ [SEED ERROR] INSTANCE es null durante onCreate()")
+                                    return@launch
+                                }
 
                                 try {
-                                    // Esperar para asegurar que Room haya creado las tablas
-                                    delay(800)
+                                    val rolDao = database.rolDao()
+                                    val estadoDao = database.estadoDao()
+                                    val categoriaDao = database.categoriaDao()
+                                    val dificultadDao = database.dificultadDao()
 
-                                    // --- ROL ---
-                                    rolDao.insert(RolEntity(id_rol = 1, nombre = "Usuario"))
-                                    rolDao.insert(RolEntity(id_rol = 2, nombre = "Administrador"))
-                                    Log.d(TAG, "✅ Roles base insertados (Usuario / Administrador)")
+                                    // ---- ROLES ----
+                                    rolDao.insert(RolEntity(1, "Usuario"))
+                                    rolDao.insert(RolEntity(2, "Administrador"))
+                                    rolDao.insert(RolEntity(3, "Quiz"))
+                                    Log.d(TAG, "🟢 [SEED] Roles insertados")
 
-                                    // --- ESTADO ---
-                                    estadoDao.insert(EstadoEntity(id_estado = 1, nombre = "Activo"))
-                                    estadoDao.insert(EstadoEntity(id_estado = 2, nombre = "Inactivo"))
-                                    Log.d(TAG, "✅ Estados base insertados (Activo / Inactivo)")
+                                    // ---- ESTADOS ----
+                                    estadoDao.insert(EstadoEntity(1, "Activo"))
+                                    estadoDao.insert(EstadoEntity(2, "Inactivo"))
+                                    Log.d(TAG, "🟢 [SEED] Estados insertados")
 
-                                    // --- CATEGORÍA ---
-                                    categoriaDao.insert(CategoriaEntity(id_categoria = 1, nombre_categoria = "Arte"))
-                                    categoriaDao.insert(CategoriaEntity(id_categoria = 2, nombre_categoria = "Deporte"))
-                                    categoriaDao.insert(CategoriaEntity(id_categoria = 3, nombre_categoria = "Historia"))
-                                    categoriaDao.insert(CategoriaEntity(id_categoria = 4, nombre_categoria = "Cine"))
-                                    Log.d(TAG, "✅ Categorías base insertadas")
+                                    // ---- CATEGORIAS ----
+                                    categoriaDao.insert(CategoriaEntity(1, "Arte"))
+                                    categoriaDao.insert(CategoriaEntity(2, "Deporte"))
+                                    categoriaDao.insert(CategoriaEntity(3, "Historia"))
+                                    categoriaDao.insert(CategoriaEntity(4, "Cine"))
+                                    Log.d(TAG, "🟢 [SEED] Categorías insertadas")
 
-                                    // --- DIFICULTAD ---
-                                    dificultadDao.insert(
-                                        DificultadEntity(
-                                            id_dificultad = 1,
-                                            nombre_dificultad = "Fácil",
-                                            tiempo_seg = "30",   // 🔸 tipo String según tu entidad
-                                            multip_punt = 1
-                                        )
-                                    )
-                                    dificultadDao.insert(
-                                        DificultadEntity(
-                                            id_dificultad = 2,
-                                            nombre_dificultad = "Medio",
-                                            tiempo_seg = "20",
-                                            multip_punt = 2
-                                        )
-                                    )
-                                    dificultadDao.insert(
-                                        DificultadEntity(
-                                            id_dificultad = 3,
-                                            nombre_dificultad = "Difícil",
-                                            tiempo_seg = "10",
-                                            multip_punt = 3
-                                        )
-                                    )
-                                    Log.d(TAG, "✅ Dificultades base insertadas")
+                                    // ---- DIFICULTADES ----
+                                    dificultadDao.insert(DificultadEntity(1, "Fácil", "30", 1))
+                                    dificultadDao.insert(DificultadEntity(2, "Medio", "20", 2))
+                                    dificultadDao.insert(DificultadEntity(3, "Difícil", "10", 3))
+                                    Log.d(TAG, "🟢 [SEED] Dificultades insertadas")
 
-                                    Log.d(TAG, "🎉 Datos base creados exitosamente")
-
-                                    // --- LLAMAR AL SEEDER ---
-                                    Log.d(TAG, "🚀 Ejecutando DatabaseSeeder para preguntas y opciones...")
+                                    // ---- SEEDER (preguntas y opciones) ----
+                                    Log.d(TAG, "🟡 [SEED] Ejecutando DatabaseSeeder...")
                                     DatabaseSeeder.seed(context, database)
+                                    Log.d(TAG, "🟢 [SEED] Ejecución de DatabaseSeeder completa")
+
+                                    Log.d(TAG, "🎉 [SEED] Base de datos completamente cargada y lista")
 
                                 } catch (e: Exception) {
-                                    Log.e(TAG, "❌ Error al crear datos base: ${e.message}")
+                                    Log.e(TAG, "❌ [SEED ERROR] ${e.message}", e)
                                 }
                             }
                         }
+
+                        override fun onOpen(db: SupportSQLiteDatabase) {
+                            super.onOpen(db)
+                            Log.d(TAG, "📂 Base de datos abierta correctamente.")
+                        }
                     })
-                    .fallbackToDestructiveMigration() // 🔹 Recrar si cambia el esquema
+                    .fallbackToDestructiveMigration()
                     .build()
 
                 INSTANCE = instance

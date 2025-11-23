@@ -42,4 +42,19 @@ interface PreguntaDao {
     // 🔹 Obtiene solo la imagen
     @Query("SELECT imagen FROM Pregunta WHERE id_pregunta = :id")
     suspend fun getImagenPorId(id: Int): ByteArray?
+
+    // 🔹 Listar todas las preguntas (versión liviana para admin)
+    @Query("""
+        SELECT id_pregunta, nombre, puntaje, Estado_id_estado, 
+               Categoria_id_categoria, Dificultad_id_dificultad
+        FROM Pregunta
+        ORDER BY id_pregunta DESC
+    """)
+    suspend fun getPreguntasLivianas(): List<PreguntaLite>
+
+
+    // 🔹 Eliminar pregunta por ID
+    @Query("DELETE FROM Pregunta WHERE id_pregunta = :id")
+    suspend fun deleteById(id: Int)
+
 }

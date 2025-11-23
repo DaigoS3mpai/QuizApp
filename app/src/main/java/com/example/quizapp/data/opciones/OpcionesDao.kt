@@ -15,4 +15,13 @@ interface OpcionesDao {
 
     @Query("SELECT COUNT(*) FROM Opciones")
     suspend fun count(): Int
+
+    // 🔹 Insertar varias opciones de una vez
+    @Insert
+    suspend fun insertAll(opciones: List<OpcionesEntity>)
+
+    // 🔹 Eliminar todas las opciones de una pregunta
+    @Query("DELETE FROM Opciones WHERE pregunta_id_pregunta = :preguntaId")
+    suspend fun deleteByPreguntaId(preguntaId: Int)
+
 }

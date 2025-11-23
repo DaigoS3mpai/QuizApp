@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
@@ -63,8 +64,12 @@ data class CurrentUserState(
     val photo: Bitmap? = null,
     val loggedIn: Boolean = false,
     val puntaje: Int = 0,
-    val puntajeGlobal: Int = 0
+    val puntajeGlobal: Int = 0,
+    val idRol: Int = 1,           // 1 = usuario normal, 2 = administrador / usuario Quiz
+    val isAdmin: Boolean = false  // para la UI
 )
+
+
 
 // ----------------- VIEWMODEL -----------------
 
@@ -237,51 +242,98 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         if (!s.canSubmit || s.isSubmitting) return
 
         viewModelScope.launch(Dispatchers.IO) {
+            // Empezamos: mostrar "Creando..."
             _register.update { it.copy(isSubmitting = true, errorMsg = null, success = false) }
 
-            delay(1500)
-
-            val existingUser = userDao.findByEmailOrUsername(s.email.trim())
-            if (existingUser != null) {
-                _register.update {
-                    it.copy(isSubmitting = false, errorMsg = "El usuario ya existe")
-                }
-                return@launch
-            }
-
-            val imageBytes = uriToByteArray(s.profileImageUri)
-
-            val newUser = UserEntity(
-                nombre = s.name.trim(),
-                correo = s.email.trim(),
-                clave = s.pass.trim(),
-                fotoPerfil = imageBytes ?: ByteArray(0),
-                idRol = 1,
-                idEstado = 1,
-                puntaje = 0,
-                puntaje_global = 0
-            )
-
             try {
+                android.util.Log.d("AuthViewModel", "🔵 submitRegister: iniciando registro...")
+
+                // Pequeña espera solo visual
+                delay(500)
+
+                val current = _register.value
+                android.util.Log.d(
+                    "AuthViewModel",
+                    "🔵 submitRegister: datos -> name=${current.name}, email=${current.email}"
+                )
+
+                // 1) Ver si ya existe usuario
+                val existingUser = userDao.findByEmailOrUsername(current.email.trim())
+                if (existingUser != null) {
+                    android.util.Log.d("AuthViewModel", "🟡 submitRegister: usuario ya existe")
+                    _register.update {
+                        it.copy(
+                            isSubmitting = false,
+                            errorMsg = "El usuario ya existe"
+                        )
+                    }
+                    return@launch
+                }
+
+                // 2) Procesar imagen (si tiene)
+                val imageBytes = uriToByteArray(current.profileImageUri)
+                android.util.Log.d(
+                    "AuthViewModel",
+                    "🔵 submitRegister: imagen procesada -> bytes=${imageBytes?.size ?: 0}"
+                )
+
+                // 3) Armar entidad de usuario
+                val newUser = UserEntity(
+                    nombre = current.name.trim(),
+                    correo = current.email.trim(),
+                    clave = current.pass.trim(),
+                    fotoPerfil = imageBytes ?: ByteArray(0),
+                    idRol = 1,
+                    idEstado = 1,
+                    puntaje = 0,
+                    puntaje_global = 0
+                )
+
+                android.util.Log.d("AuthViewModel", "🔵 submitRegister: insertando usuario en la BD...")
+
+                // 4) Insertar en la BD
                 userDao.insert(newUser)
+
+                // 5) Volver a buscar para obtener el id autogenerado
                 val inserted = userDao.login(newUser.correo, newUser.clave)
 
                 withContext(Dispatchers.Main) {
                     if (inserted != null) {
-                        _register.update { it.copy(isSubmitting = false, success = true) }
+                        android.util.Log.d("AuthViewModel", "🟢 submitRegister: usuario creado con id=${inserted.idUsuario}")
+
+                        _register.update {
+                            it.copy(
+                                isSubmitting = false,
+                                success = true,
+                                errorMsg = null
+                            )
+                        }
                         setCurrentUser(inserted)
                         viewModelScope.launch { saveSession(inserted.idUsuario) }
                     } else {
-                        _register.update { it.copy(isSubmitting = false, errorMsg = "Error al registrar usuario") }
+                        android.util.Log.e("AuthViewModel", "❌ submitRegister: insertó pero luego no encontró el usuario")
+                        _register.update {
+                            it.copy(
+                                isSubmitting = false,
+                                success = false,
+                                errorMsg = "Error al registrar usuario"
+                            )
+                        }
                     }
                 }
             } catch (e: Exception) {
+                android.util.Log.e("AuthViewModel", "❌ submitRegister: excepción en registro", e)
                 _register.update {
-                    it.copy(isSubmitting = false, errorMsg = "Error de base de datos: ${e.message}")
+                    it.copy(
+                        isSubmitting = false,
+                        success = false,
+                        errorMsg = "Error de base de datos: ${e.message}"
+                    )
                 }
             }
         }
     }
+
 
     fun clearRegisterResult() {
         _register.update { it.copy(success = false, errorMsg = null) }
@@ -294,6 +346,8 @@ class AuthViewModel(private val context: Context) : ViewModel() {
             BitmapFactory.decodeByteArray(user.fotoPerfil, 0, user.fotoPerfil.size)
         else null
 
+        val esAdmin = user.idRol == 2 // ⚠️ Asegúrate que el usuario "Quiz" / admin tenga rol_id_rol = 2
+
         _currentUser.update {
             it.copy(
                 id = user.idUsuario,
@@ -302,10 +356,13 @@ class AuthViewModel(private val context: Context) : ViewModel() {
                 photo = bmp,
                 loggedIn = true,
                 puntaje = user.puntaje,
-                puntajeGlobal = user.puntaje_global
+                puntajeGlobal = user.puntaje_global,
+                idRol = user.idRol,
+                isAdmin = esAdmin
             )
         }
     }
+
 
     fun logout() {
         viewModelScope.launch {
@@ -450,4 +507,13 @@ class AuthViewModel(private val context: Context) : ViewModel() {
     fun clearPasswordResult() {
         _password.update { PasswordUiState() }
     }
+
+    private val _dbReady = MutableStateFlow(false)
+    val dbReady: StateFlow<Boolean> = _dbReady
+
+    fun markDatabaseReady() {
+        _dbReady.value = true
+        Log.d("AuthViewModel", "🎉 Base de datos marcada como LISTA")
+    }
+
 }

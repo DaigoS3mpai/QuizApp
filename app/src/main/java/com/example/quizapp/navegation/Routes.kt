@@ -14,4 +14,12 @@ sealed class Route(val path: String) {
 
     // Pantalla de quiz (recibe dificultad y categoría)
     data object QuizScreen : Route("QuizFacil/{dificultadId}/{categoriaId}")
+
+    // 🔹 NUEVAS PANTALLAS ADMIN
+    data object AdminMenu : Route("adminmenu")
+    data object AdminJugadores : Route("adminjugadores")
+    data object AdminHistorial : Route("adminhistorial")
+    data object AdminPreguntas : Route("adminpreguntas")
+    data object AdminFeedback : Route("adminfeedback")
+    data object FeedbackJugador : Route("feedbackJugador")
 }

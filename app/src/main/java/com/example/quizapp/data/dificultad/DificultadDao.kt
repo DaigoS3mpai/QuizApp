@@ -15,4 +15,8 @@ interface DificultadDao {
 
     @Query("SELECT COUNT(*) FROM Dificultad")
     suspend fun count(): Int
+
+    @Query("SELECT * FROM Dificultad")
+    suspend fun getAll(): List<DificultadEntity>
+
 }

@@ -28,6 +28,7 @@ import com.example.quizapp.navegation.Route
 import com.example.quizapp.ui.component.AppTopBar
 import com.example.quizapp.ui.viewmodel.AuthViewModel
 import com.example.quizapp.ui.viewmodel.AuthViewModelFactory
+import com.example.quizapp.utils.DatabaseReadyNotifier
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +44,14 @@ fun Registro(
     var buttonsVisible by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmVisible by remember { mutableStateOf(false) }
+
+    val dbReady by DatabaseReadyNotifier.ready.collectAsState()
+
+    if (!dbReady) {
+        Text("Cargando base de datos...", color = Color.White)
+    } else {
+        Text("Base de datos lista ✔")
+    }
 
     LaunchedEffect(Unit) { buttonsVisible = true }
 
