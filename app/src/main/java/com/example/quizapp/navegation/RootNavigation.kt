@@ -28,7 +28,6 @@ import com.example.quizapp.ui.viewmodel.Auth.AuthViewModelFactory
 import com.example.quizapp.utils.sessionDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 
 @Composable
 fun RootNavigation(windowSizeClass: WindowSizeClass) {
