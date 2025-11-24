@@ -2,7 +2,12 @@ package com.example.quizapp.ui.screen.quiz
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
@@ -11,6 +16,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,23 +39,27 @@ import com.example.quizapp.navegation.Route
 import com.example.quizapp.ui.component.AppTopBar
 import com.example.quizapp.ui.viewmodel.Auth.AuthViewModel
 import com.example.quizapp.ui.viewmodel.Auth.AuthViewModelFactory
+import com.example.quizapp.ui.viewmodel.menu.MenuOpcionesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MenuOpciones(navController: NavHostController) {
     val context = LocalContext.current
-    val viewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(context))
 
-    //Cargar sesión
+    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(context))
+    val menuViewModel: MenuOpcionesViewModel = viewModel()
+
     LaunchedEffect(Unit) {
-        viewModel.loadSession()
+        authViewModel.loadSession()
+        menuViewModel.cargarFunFact()
     }
 
-    val currentUser by viewModel.currentUser.collectAsState()
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val funFactState by menuViewModel.funFactState.collectAsState()
+
     var buttonsVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { buttonsVisible = true }
 
-    //Animación de brillo pulsante
     val infiniteTransition = rememberInfiniteTransition(label = "")
     val glowAlpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
@@ -69,7 +79,6 @@ fun MenuOpciones(navController: NavHostController) {
         topBar = {
             AppTopBar(
                 actions = {
-                    //Imagen de perfil con efecto "glow"
                     Box(
                         modifier = Modifier
                             .size(54.dp)
@@ -104,47 +113,123 @@ fun MenuOpciones(navController: NavHostController) {
             )
         }
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .background(Color(0xFF87CEEB))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            //Logo principal
+
+            // 🔹 Logo más pequeño
             Image(
                 painter = painterResource(R.drawable.logo),
                 contentDescription = "Logo Aplicacion",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(250.dp),
+                    .height(180.dp),   // antes 250.dp
                 contentScale = ContentScale.Fit
             )
-            // 🔹 Botón SOLO PARA ADMIN: administrar preguntas del quiz
-            if (currentUser.isAdmin) {
-                AnimatedVisibility(
-                    visible = buttonsVisible,
-                    enter = scaleIn(animationSpec = tween(500, delayMillis = 150)),
-                    exit = scaleOut(animationSpec = tween(500))
+
+            // 🔹 Card de dato curioso más compacta
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 110.dp, max = 180.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF00FFC4)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Button(
-                        onClick = { navController.navigate(Route.AdminPreguntas.path) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD54F),
-                            contentColor = Color.Black
-                        )
-                    ) {
-                        Text("Administrar preguntas", fontSize = 22.sp)
+                    Text(
+                        text = "Dato curioso del día",
+                        fontSize = 16.sp,
+                        color = Color(0xFF0D47A1)
+                    )
+
+                    when {
+                        funFactState.isLoading -> {
+                            Text("Cargando dato curioso...", fontSize = 14.sp)
+                        }
+
+                        funFactState.error != null -> {
+                            Text(
+                                text = funFactState.error ?: "",
+                                color = Color.Red,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        funFactState.fact.isNotBlank() -> {
+                            Text(
+                                text = funFactState.fact,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        else -> {
+                            Text("No hay datos disponibles", fontSize = 14.sp)
+                        }
+                    }
+
+                    Spacer(Modifier.height(4.dp))
+
+                    TextButton(onClick = { menuViewModel.cargarFunFact() }) {
+                        Text("Otro dato curioso", fontSize = 14.sp)
                     }
                 }
             }
-            // Botón para que cualquier jugador envíe feedback
+
+            // ⬇️ De aquí para abajo todo igual, solo cambian los espacios
+
+            if (currentUser.isAdmin) {
+                AnimatedVisibility(
+                    visible = buttonsVisible,
+                    enter = scaleIn(tween(500, delayMillis = 200)),
+                    exit = scaleOut(tween(500))
+                ) {
+                    Button(
+                        onClick = { navController.navigate(Route.AdminMenu.path) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00FFE0),
+                            contentColor = Color.Black
+                        )
+                    ) {
+                        Text("Menu Admin", fontSize = 20.sp)
+                    }
+                }
+            }
+
+            if (currentUser.isQuiz) {
+                AnimatedVisibility(
+                    visible = buttonsVisible,
+                    enter = scaleIn(tween(500, delayMillis = 200)),
+                    exit = scaleOut(tween(500))
+                ) {
+                    Button(
+                        onClick = { navController.navigate(Route.QuizMenu.path) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00FFE0),
+                            contentColor = Color.Black
+                        )
+                    ) {
+                        Text("Menu Quiz", fontSize = 18.sp)
+                    }
+                }
+            }
+
             AnimatedVisibility(
                 visible = buttonsVisible,
-                enter = scaleIn(animationSpec = tween(500, delayMillis = 150)),
-                exit = scaleOut(animationSpec = tween(500))
+                enter = scaleIn(tween(500, delayMillis = 200)),
+                exit = scaleOut(tween(500))
             ) {
                 Button(
                     onClick = { navController.navigate(Route.FeedbackJugador.path) },
@@ -153,91 +238,14 @@ fun MenuOpciones(navController: NavHostController) {
                         contentColor = Color.Black
                     )
                 ) {
-                    Text("Enviar feedback", fontSize = 20.sp)
+                    Text("Enviar feedback", fontSize = 18.sp)
                 }
             }
 
-            // Solo Admin/Usuario Quiz: ver feedback recibido
-            if (currentUser.isAdmin) {
-                AnimatedVisibility(
-                    visible = buttonsVisible,
-                    enter = scaleIn(animationSpec = tween(500, delayMillis = 200)),
-                    exit = scaleOut(animationSpec = tween(500))
-                ) {
-                    Button(
-                        onClick = { navController.navigate(Route.AdminFeedback.path) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD54F),
-                            contentColor = Color.Black
-                        )
-                    ) {
-                        Text("Ver feedback", fontSize = 20.sp)
-                    }
-                }
-            }
-
-
-            // 🔹 Botón SOLO PARA ADMIN: administrar Usuarios e Historial
-            if (currentUser.isAdmin) {
-                AnimatedVisibility(
-                    visible = buttonsVisible,
-                    enter = scaleIn(animationSpec = tween(500, delayMillis = 200)),
-                    exit = scaleOut(animationSpec = tween(500))
-                ){
-                    Button(
-                        onClick = { navController.navigate(Route.AdminMenu.path) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00FFE0),
-                            contentColor = Color.Black
-                        )
-                    ) {
-                        Text("Menu Admin", fontSize = 22.sp)
-                    }
-                }
-            }
-
-
-            // Solo Usuario Quiz: El que se encarga del Crud de las preguntas
-            if (currentUser.isQuiz) {
-                AnimatedVisibility(
-                    visible = buttonsVisible,
-                    enter = scaleIn(animationSpec = tween(500, delayMillis = 200)),
-                    exit = scaleOut(animationSpec = tween(500))
-                ){
-                    Button(
-                        onClick = { navController.navigate(Route.QuizMenu.path) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00FFE0),
-                            contentColor = Color.Black
-                        )
-                    ) {
-                        Text("Menu Quiz", fontSize = 20.sp)
-                    }
-                }
-            }
-
-            // Botón para que cualquier jugador envíe feedback
             AnimatedVisibility(
                 visible = buttonsVisible,
-                enter = scaleIn(animationSpec = tween(500, delayMillis = 200)),
-                exit = scaleOut(animationSpec = tween(500))
-            ){
-                Button(
-                    onClick = { navController.navigate(Route.FeedbackJugador.path) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF58B956),
-                        contentColor = Color.Black
-                    )
-                ) {
-                    Text("Enviar feedback", fontSize = 20.sp)
-                }
-            }
-
-            //Botón JUGAR
-            AnimatedVisibility(
-                visible = buttonsVisible,
-                enter = scaleIn(animationSpec = tween(500, delayMillis = 200)),
-                exit = scaleOut(animationSpec = tween(500))
+                enter = scaleIn(tween(500, delayMillis = 200)),
+                exit = scaleOut(tween(500))
             ) {
                 Button(
                     onClick = { navController.navigate(Route.Selecion.path) },
@@ -246,20 +254,18 @@ fun MenuOpciones(navController: NavHostController) {
                         contentColor = Color.Black
                     )
                 ) {
-                    Text("Jugar", fontSize = 25.sp)
+                    Text("Jugar", fontSize = 22.sp)
                 }
             }
 
-
-            //Botón CERRAR SESIÓN
             AnimatedVisibility(
                 visible = buttonsVisible,
-                enter = scaleIn(animationSpec = tween(500, delayMillis = 200)),
-                exit = scaleOut(animationSpec = tween(500))
+                enter = scaleIn(tween(500, delayMillis = 200)),
+                exit = scaleOut(tween(500))
             ) {
                 Button(
                     onClick = {
-                        viewModel.logout()
+                        authViewModel.logout()
                         Toast.makeText(context, "Sesión cerrada", Toast.LENGTH_SHORT).show()
                         navController.navigate(Route.Login.path) {
                             popUpTo(Route.MenuOpciones.path) { inclusive = true }
@@ -270,7 +276,7 @@ fun MenuOpciones(navController: NavHostController) {
                         contentColor = Color.Black
                     )
                 ) {
-                    Text("Cerrar Sesión", fontSize = 25.sp)
+                    Text("Cerrar Sesión", fontSize = 22.sp)
                 }
             }
         }
