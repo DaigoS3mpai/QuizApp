@@ -122,6 +122,60 @@ fun MenuOpciones(navController: NavHostController) {
                     .height(250.dp),
                 contentScale = ContentScale.Fit
             )
+            // 🔹 Botón SOLO PARA ADMIN: administrar preguntas del quiz
+            if (currentUser.isAdmin) {
+                AnimatedVisibility(
+                    visible = buttonsVisible,
+                    enter = scaleIn(animationSpec = tween(500, delayMillis = 150)),
+                    exit = scaleOut(animationSpec = tween(500))
+                ) {
+                    Button(
+                        onClick = { navController.navigate(Route.AdminPreguntas.path) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFD54F),
+                            contentColor = Color.Black
+                        )
+                    ) {
+                        Text("Administrar preguntas", fontSize = 22.sp)
+                    }
+                }
+            }
+            // Botón para que cualquier jugador envíe feedback
+            AnimatedVisibility(
+                visible = buttonsVisible,
+                enter = scaleIn(animationSpec = tween(500, delayMillis = 150)),
+                exit = scaleOut(animationSpec = tween(500))
+            ) {
+                Button(
+                    onClick = { navController.navigate(Route.FeedbackJugador.path) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF58B956),
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Text("Enviar feedback", fontSize = 20.sp)
+                }
+            }
+
+            // Solo Admin/Usuario Quiz: ver feedback recibido
+            if (currentUser.isAdmin) {
+                AnimatedVisibility(
+                    visible = buttonsVisible,
+                    enter = scaleIn(animationSpec = tween(500, delayMillis = 200)),
+                    exit = scaleOut(animationSpec = tween(500))
+                ) {
+                    Button(
+                        onClick = { navController.navigate(Route.AdminFeedback.path) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFD54F),
+                            contentColor = Color.Black
+                        )
+                    ) {
+                        Text("Ver feedback", fontSize = 20.sp)
+                    }
+                }
+            }
+
 
             // 🔹 Botón SOLO PARA ADMIN: administrar Usuarios e Historial
             if (currentUser.isAdmin) {

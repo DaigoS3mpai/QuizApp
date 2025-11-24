@@ -17,6 +17,26 @@ class MainActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     RootNavigation()
                 }
+
+                // 🔹 Pantallas de administrador
+                composable(Route.AdminMenu.path) {
+                    AdminMenuScreen(navController)
+                }
+                composable(Route.AdminJugadores.path) {
+                    AdminJugadoresScreen(navController)
+                }
+                composable(Route.AdminHistorial.path) {
+                    AdminHistorialScreen(navController)
+                }
+                composable(Route.AdminPreguntas.path) {
+                    AdminPreguntasScreen(navController)
+                }
+                composable(Route.AdminFeedback.path) {
+                    AdminFeedbackScreen(navController)
+                }
+                composable(Route.FeedbackJugador.path) {
+                    FeedbackScreen(navController)
+                }
             }
         }
     }
