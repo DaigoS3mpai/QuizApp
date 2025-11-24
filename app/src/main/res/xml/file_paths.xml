@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
 
-  <!-- Directorio interno temporal (cache) donde se guardan las fotos de cámara -->
-  <cache-path
-      name="camera_cache"
-      path="images/" />
+    <!-- Para las fotos temporales de la cámara:
+         /data/data/com.example.quizapp/cache/images/... -->
+    <cache-path
+        name="camera_cache"
+        path="images/" />
+
+    <!-- (Opcional) Para imágenes guardadas en filesDir/profile_images -->
+    <files-path
+        name="profile_images"
+        path="profile_images/" />
 
 </paths>
