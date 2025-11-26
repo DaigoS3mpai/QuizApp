@@ -128,13 +128,16 @@ fun Perfil(navController: NavHostController) {
         buttonsVisible = true
     }
 
-    // ❌ Ya no necesitamos este LaunchedEffect(profileImageUri)
-    // porque ya llamamos a viewModel.onProfileImageSelected()
-    // directamente en los callbacks de cámara/galería.
-    //
-    // LaunchedEffect(profileImageUri) { ... } -> eliminado
-
-    Scaffold(topBar = { AppTopBar() }) { innerPadding ->
+    Scaffold(topBar = { AppTopBar(showBackButton = true,
+        onBackClick = {
+            navController.navigate(Route.MenuOpciones.path) {
+                // Opcional: limpiar el backstack para que no vuelva a Perfil/Login
+                popUpTo(Route.MenuOpciones.path) { inclusive = false }
+                launchSingleTop = true
+            }
+        }
+    )
+    }) { innerPadding ->
 
         Box(
             modifier = Modifier

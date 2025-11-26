@@ -71,7 +71,8 @@ fun RootNavigation(windowSizeClass: WindowSizeClass) {
     val noBackRoutes = listOf(
         Route.Login.path,
         Route.MenuInicioSesion.path,
-        Route.MenuOpciones.path
+        Route.MenuOpciones.path,
+        Route.Perfil.path
     )
 
     val showBackButton =
@@ -100,20 +101,21 @@ fun RootNavigation(windowSizeClass: WindowSizeClass) {
     }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             AppTopBar(
-                title = dynamicTitle,
                 showBackButton = showBackButton,
                 onBackClick = { navController.popBackStack() },
                 windowSizeClass = windowSizeClass
             )
         }
     ) { innerPadding ->
-
         NavHost(
             navController = navController,
             startDestination = startDestination!!,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
 
             // ------------------ AUTH ------------------

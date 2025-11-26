@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
-    // ✅ Plugin correcto de KSP
     id("com.google.devtools.ksp") version "2.0.21-1.0.25"
 }
 
@@ -19,7 +18,6 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // ✅ Añadimos la exportación de schemas aquí
         javaCompileOptions {
             annotationProcessorOptions {
                 arguments += mapOf("room.schemaLocation" to "$projectDir/schemas")
@@ -28,12 +26,26 @@ android {
     }
 
     buildTypes {
+        debug {
+            isMinifyEnabled = false
+            enableUnitTestCoverage = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+
+    packaging {
+        resources {
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE-notice.md"
+            excludes += "META-INF/NOTICE.md"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE.txt"
         }
     }
 
@@ -73,10 +85,11 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
 
-    // --- ROOM (sin plugin, usando KSP) ---
+    // --- ROOM ---
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.ui.graphics)
     ksp("androidx.room:room-compiler:2.6.1")
 
     // --- Imagen ---
@@ -86,14 +99,22 @@ dependencies {
     // --- DataStore ---
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
-    // --- Test ---
-    testImplementation(libs.junit)
+    // --- Unit Tests ---
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("io.mockk:mockk:1.13.10")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+
+    // --- Android Instrumented Tests ---
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+
 
     // --- Api Rest ---
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -102,7 +123,5 @@ dependencies {
 
     // --- Ajustar Pantalla ---
     implementation("androidx.compose.material3:material3-window-size-class:1.3.0")
-
-
 
 }

@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.statusBarsPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,7 +21,7 @@ fun AppTopBar(
     showBackButton: Boolean = false,
     onBackClick: (() -> Unit)? = null,
     actions: @Composable (() -> Unit)? = null,
-    windowSizeClass: WindowSizeClass? = null // <- NUEVO
+    windowSizeClass: WindowSizeClass? = null
 ) {
     // Tamaño de texto según ancho de pantalla
     val titleTextStyle = when (windowSizeClass?.widthSizeClass) {
@@ -63,6 +65,7 @@ fun AppTopBar(
             containerColor = Color(0xFF87CEEB),
             titleContentColor = Color.Black
         ),
-        modifier = Modifier.height(appBarHeight)
+        modifier = Modifier
+            .height(appBarHeight)
     )
 }

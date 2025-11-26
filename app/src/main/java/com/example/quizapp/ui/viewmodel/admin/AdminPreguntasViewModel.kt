@@ -1,11 +1,10 @@
 package com.example.quizapp.ui.viewmodel.admin
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.quizapp.data.remote.dto.PreguntaAdminResponseDto
 import com.example.quizapp.data.repository.QuizRepository
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +17,8 @@ data class AdminPreguntasUiState(
 )
 
 class AdminPreguntasViewModel(
-    private val repo: QuizRepository = QuizRepository()
+    private val repo: QuizRepository = QuizRepository(),
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO   // 👈 inyectable para tests
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AdminPreguntasUiState())
@@ -29,7 +29,7 @@ class AdminPreguntasViewModel(
     }
 
     fun cargarPreguntas() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
             try {
                 val lista = repo.obtenerPreguntas()
@@ -63,7 +63,7 @@ class AdminPreguntasViewModel(
             return
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             try {
                 repo.crearPregunta(
                     enunciado = enunciado,
@@ -99,7 +99,7 @@ class AdminPreguntasViewModel(
             return
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             try {
                 repo.actualizarPregunta(
                     id = id,
@@ -121,16 +121,11 @@ class AdminPreguntasViewModel(
         }
     }
 
-
     fun eliminarPregunta(id: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             try {
-                // Llamamos al repositorio correcto
                 repo.eliminarPregunta(id)
-
-                // Volvemos a cargar la lista desde el backend
                 cargarPreguntas()
-
             } catch (e: Exception) {
                 e.printStackTrace()
                 _uiState.value = _uiState.value.copy(

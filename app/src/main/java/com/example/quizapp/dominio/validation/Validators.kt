@@ -3,10 +3,16 @@ package com.example.quizapp.domain.validation
 import android.util.Patterns // Usamos el patrón estándar de Android para emails
 
 // Valida que el email no esté vacío y cumpla patrón de email
-fun validateEmail(email: String): String? {                            // Retorna String? (mensaje) o null si está OK
-    if (email.isBlank()) return "El email es obligatorio"              // Regla 1: no vacío
-    val ok = Patterns.EMAIL_ADDRESS.matcher(email).matches()           // Regla 2: coincide con patrón de email
-    return if (!ok) "Formato de email inválido" else null              // Si no cumple, devolvemos mensaje
+fun validateEmail(email: String): String? {
+    if (email.isBlank()) return "El email es obligatorio"
+
+    // Intentamos usar el patrón de Android si existe
+    val androidPattern = Patterns.EMAIL_ADDRESS
+    val ok = androidPattern?.matcher(email)?.matches()
+    // Si es null (como en tests unitarios), usamos un regex simple de respaldo
+        ?: Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$").matches(email)
+
+    return if (!ok) "Formato de email inválido" else null
 }
 
 // Nombre de Usuario

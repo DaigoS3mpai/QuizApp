@@ -6,13 +6,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.quizapp.data.remote.dto.FeedbackResponseDto
 import com.example.quizapp.data.repository.FeedbackRepository
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class FeedbackViewModel(
-    private val repo: FeedbackRepository = FeedbackRepository()
+    private val repo: FeedbackRepository = FeedbackRepository(),
+    // 👇 dispatcher inyectable para test
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
     private val _misFeedback = MutableStateFlow<List<FeedbackResponseDto>>(emptyList())
@@ -25,7 +28,7 @@ class FeedbackViewModel(
     val mensajeError: StateFlow<String?> = _mensajeError
 
     fun cargarMisFeedback(userId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {   // 👈 antes era Dispatchers.IO
             try {
                 val lista = repo.listarPorUsuario(userId)
                 _misFeedback.value = lista
@@ -43,14 +46,14 @@ class FeedbackViewModel(
         tipo: String,
         destino: String
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {   // 👈 antes era Dispatchers.IO
             _enviando.value = true
             try {
                 repo.enviarFeedback(
-                    usuarioId = userId,
-                    mensaje = mensaje,
-                    tipo = tipo,
-                    destino = destino
+                    userId,
+                    mensaje,
+                    tipo,
+                    destino
                 )
                 // recargar lista después de enviar
                 cargarMisFeedback(userId)
@@ -64,9 +67,7 @@ class FeedbackViewModel(
     }
 }
 
-class FeedbackViewModelFactory(
-    private val context: Context
-) : ViewModelProvider.Factory {
+class FeedbackViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(FeedbackViewModel::class.java)) {
