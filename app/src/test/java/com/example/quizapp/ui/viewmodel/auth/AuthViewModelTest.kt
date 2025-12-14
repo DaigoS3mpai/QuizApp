@@ -138,4 +138,26 @@ class AuthViewModelTest {
         assertFalse(viewModel.password.value.success)
         assertNull(viewModel.password.value.errorMsg)
     }
+
+    @Test
+    fun crear_usuario_solo_con_nombre_y_email_y_password_vacios() = runTest {
+        viewModel.onNameChange("Juan Perez")
+        viewModel.onRegisterEmailChange("")
+        viewModel.onRegisterPassChange("")
+        viewModel.onConfirmChange("")
+
+        val state = viewModel.register.value
+
+        // THEN → validaciones
+        assertEquals("Juan Perez", state.name)
+        assertTrue(state.email.isBlank())
+        assertTrue(state.pass.isBlank())
+
+        // No debería permitir submit
+        assertFalse(state.canSubmit)
+
+        // Debe existir error en email y password
+        assertNotNull(state.emailError)
+        assertNotNull(state.passError)
+    }
 }

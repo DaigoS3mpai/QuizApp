@@ -30,7 +30,7 @@ fun CircularImageButton(
         Image(
             painter = painterResource(id = imageRes),
             contentDescription = null,
-            contentScale = ContentScale.Fit,   // 👈 MOSTRAR IMAGEN COMPLETA
+            contentScale = ContentScale.Fit,
             modifier = Modifier.fillMaxSize()
         )
     }

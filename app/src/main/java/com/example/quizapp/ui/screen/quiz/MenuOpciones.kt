@@ -35,6 +35,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.quizapp.R
+import com.example.quizapp.domain.validation.validateEmail
 import com.example.quizapp.navegation.Route
 import com.example.quizapp.ui.component.AppTopBar
 import com.example.quizapp.ui.viewmodel.Auth.AuthViewModel
@@ -265,8 +266,9 @@ fun MenuOpciones(navController: NavHostController) {
             ) {
                 Button(
                     onClick = {
+                        val usuario = currentUser.name
                         authViewModel.logout()
-                        Toast.makeText(context, "Sesión cerrada", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Sesión cerrada ${usuario}", Toast.LENGTH_SHORT).show()
                         navController.navigate(Route.Login.path) {
                             popUpTo(Route.MenuOpciones.path) { inclusive = true }
                         }

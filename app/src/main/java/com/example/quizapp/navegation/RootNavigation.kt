@@ -37,7 +37,7 @@ fun RootNavigation(windowSizeClass: WindowSizeClass) {
 
     var startDestination by remember { mutableStateOf<String?>(null) }
 
-    // 🔹 Al abrir la app, revisamos DataStore por user_id
+    // Al abrir la app, revisamos DataStore por user_id
     LaunchedEffect(Unit) {
         val USER_ID_KEY = intPreferencesKey("user_id")
 
